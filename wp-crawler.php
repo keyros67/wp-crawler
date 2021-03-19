@@ -15,8 +15,10 @@
  * @wordpress-plugin
  * Plugin Name:       WP Crawler
  * Plugin URI:        https://wp-crawler.com
- * Description:       This is a short description of what the plugin does. It's displayed in the WordPress admin area.
+ * Description:       This plugin allows you to crawl the web pages of your website to see how they are linked together.
  * Version:           1.0.0
+ * Requires at least: 5.2
+ * Requires PHP:      7.0
  * Author:            Hervé Villemin
  * Author URI:        https://www.linkedin.com/in/villemin/
  * License:           GPL-2.0+
@@ -26,9 +28,7 @@
  */
 
 // If this file is called directly, abort.
-if ( ! defined( 'WPINC' ) ) {
-	die;
-}
+defined( 'ABSPATH' ) || exit;
 
 /**
  * Currently plugin version.
