@@ -30,6 +30,13 @@
 // If this file is called directly, abort.
 defined( 'ABSPATH' ) || exit;
 
+// Constants
+define( 'WP_CRAWLER_FILE',          __FILE__ );
+define( 'WP_CRAWLER_PATH',          realpath( plugin_dir_path( WP_CRAWLER_FILE ) ) . '/' );
+define( 'WP_CRAWLER_INC_PATH',      realpath( WP_CRAWLER_PATH . 'includes' ) . '/' );
+define( 'WP_CRAWLER_ADMIN_PATH',    realpath( WP_CRAWLER_PATH . 'admin' ) . '/' );
+define( 'WP_CRAWLER_I18N_PATH',    realpath( WP_CRAWLER_PATH . 'languages' ) . '/' );
+
 /**
  * Currently plugin version.
  * Start at version 1.0.0 and use SemVer - https://semver.org
@@ -42,7 +49,7 @@ define( 'WP_CRAWLER_VERSION', '1.0.0' );
  * This action is documented in includes/class-wp-crawler-activator.php
  */
 function activate_wp_crawler() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-wp-crawler-activator.php';
+	require_once WP_CRAWLER_INC_PATH . 'class-wp-crawler-activator.php';
 	Wp_Crawler_Activator::activate();
 }
 
@@ -51,7 +58,7 @@ function activate_wp_crawler() {
  * This action is documented in includes/class-wp-crawler-deactivator.php
  */
 function deactivate_wp_crawler() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-wp-crawler-deactivator.php';
+	require_once WP_CRAWLER_INC_PATH . 'class-wp-crawler-deactivator.php';
 	Wp_Crawler_Deactivator::deactivate();
 }
 
@@ -62,7 +69,7 @@ register_deactivation_hook( __FILE__, 'deactivate_wp_crawler' );
  * The core plugin class that is used to define internationalization,
  * admin-specific hooks, and public-facing site hooks.
  */
-require plugin_dir_path( __FILE__ ) . 'includes/class-wp-crawler.php';
+require WP_CRAWLER_INC_PATH . 'class-wp-crawler.php';
 
 /**
  * Begins execution of the plugin.

@@ -54,6 +54,36 @@ class Wp_Crawler_Admin {
 
 	}
 
+
+    /**
+     * Add the plugin page to the settings submenu for administrators
+     *
+     * @since   1.0.0
+     */
+    public function create_menu() {
+
+        add_options_page(
+        	'WP Crawler Dashboard',
+	        'WP Crawler',
+	        'manage_options',
+	        'wp-crawler',
+	        array( $this, 'load_page_dashboard' )
+        );
+    }
+
+
+	/**
+	 * Load the dashboard page
+	 *
+	 * @since   1.0.0
+	 */
+	public function load_page_dashboard() {
+
+		include_once WP_CRAWLER_ADMIN_PATH . '/partials/wp-crawler-admin-dashboard.php';
+
+    }
+
+
 	/**
 	 * Register the stylesheets for the admin area.
 	 *
