@@ -31,6 +31,24 @@ class Wp_Crawler_Activator {
 	 */
 	public static function activate() {
 
-	}
+		// Database creation
+		global $wpdb;
+		$charset_collate = $wpdb->get_charset_collate();
 
+		$table_name = $wpdb->prefix . "wpcrawler";
+
+		$sql = "CREATE TABLE $table_name (
+	    		page_id bigint(20) NOT NULL AUTO_INCREMENT,
+	    		parent_page_id bigint(20) NULL,
+	    		url  text NOT NULL,
+	    		count smallint NOT NULL DEFAULT 0,
+	    		PRIMARY KEY (page_id),
+	    		CONSTRAINT FK_ParentPage FOREIGN KEY (parent_page_id) REFERENCES $table_name(page_id)
+	    ) $charset_collate;";
+
+		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+		maybe_create_table( $table_name, $sql );
+
+	}
 }
+      
