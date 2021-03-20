@@ -29,3 +29,12 @@
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
 }
+
+// DB table deletion
+// TODO: Add some security checks
+global $wpdb;
+
+$table_name = $wpdb->prefix . "wpcrawler";
+
+$sql = "DROP TABLE IF EXISTS $table_name";
+$wpdb->query( $sql );
