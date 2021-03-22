@@ -35,7 +35,8 @@ define( 'WP_CRAWLER_FILE',          __FILE__ );
 define( 'WP_CRAWLER_PATH',          realpath( plugin_dir_path( WP_CRAWLER_FILE ) ) . '/' );
 define( 'WP_CRAWLER_INC_PATH',      realpath( WP_CRAWLER_PATH . 'includes' ) . '/' );
 define( 'WP_CRAWLER_ADMIN_PATH',    realpath( WP_CRAWLER_PATH . 'admin' ) . '/' );
-define( 'WP_CRAWLER_I18N_PATH',    realpath( WP_CRAWLER_PATH . 'languages' ) . '/' );
+define( 'WP_CRAWLER_I18N_PATH',     realpath( WP_CRAWLER_PATH . 'languages' ) . '/' );
+define( 'WP_CRAWLER_TABLE',         'wpcrawler' );
 
 /**
  * Currently plugin version.

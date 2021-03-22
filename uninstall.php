@@ -34,7 +34,7 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 // TODO: Add some security checks
 global $wpdb;
 
-$table_name = $wpdb->prefix . "wpcrawler";
+$table_name = $wpdb->prefix . WP_CRAWLER_TABLE;
 
 $sql = "DROP TABLE IF EXISTS $table_name";
 $wpdb->query( $sql );
