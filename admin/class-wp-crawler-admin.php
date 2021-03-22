@@ -41,17 +41,28 @@ class Wp_Crawler_Admin {
 	private $version;
 
 	/**
+	 * The table used by the plugin.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 * @var      string    $table_name    The table name.
+	 */
+	private $table_name;
+
+	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since    1.0.0
-	 * @param      string    $plugin_name       The name of this plugin.
-	 * @param      string    $version    The version of this plugin.
+	 * @param      string    $plugin_name   The name of this plugin.
+	 * @param      string    $version       The version of this plugin.
 	 */
 	public function __construct( $plugin_name, $version ) {
 
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
 
+		global $wpdb;
+		$this->table_name = $wpdb->prefix . WP_CRAWLER_TABLE;
 	}
 
 
@@ -66,11 +77,59 @@ class Wp_Crawler_Admin {
         	'WP Crawler Dashboard',
 	        'WP Crawler',
 	        'manage_options',
-	        'wp-crawler',
-	        array( $this, 'load_page_dashboard' )
+	        $this->plugin_name,
+	        array( $this, 'page_dashboard' )
         );
     }
 
+	/**
+	 * Crawl the website
+	 *
+	 * @since   1.0.0
+	 */
+	private function crawl() {
+
+	    include_once( WP_CRAWLER_ADMIN_PATH. 'lib/simple_html_dom.php' );
+
+	    global $wpdb;
+	    //$table_name = $wpdb->prefix . WP_CRAWLER_TABLE;
+
+	    $wpdb->query( "TRUNCATE TABLE $this->table_name" );
+
+	    $page_url = get_site_url();
+
+	    // Insert the current page in the db
+	    $wpdb->insert($this->table_name, array(
+	            'url'   => $page_url,
+            )
+        );
+
+	    $page_id = $wpdb->insert_id;
+
+        // Get the html of the current page and then the links
+	    $html = file_get_html( $page_url );
+
+	    $links = $html->find( 'a' );
+
+	    $parse_page_url = parse_url( $page_url );
+
+	    foreach( $links as $link ) {
+
+		    $child_page_url = $link->href;
+
+		    // Check if the url is from this website with or without http(s), with or without www.
+		    if ( preg_match( '#^(?:https?:\/\/)?(?:www\.)?' . str_replace( '/', '\/', $parse_page_url['host']  . $parse_page_url['path'] ) . '#', $child_page_url) ) {
+
+		        // Insert the child page in the db
+		        $wpdb->insert($this->table_name, array(
+		                'parent_page_id'    => $page_id,
+                        'url'               => $child_page_url,
+                    )
+                );
+
+		    }
+	    }
+    }
 
 	/**
 	 * Load the dashboard page
