@@ -92,7 +92,6 @@ class Wp_Crawler_Admin {
 	    include_once( WP_CRAWLER_ADMIN_PATH. 'lib/simple_html_dom.php' );
 
 	    global $wpdb;
-	    //$table_name = $wpdb->prefix . WP_CRAWLER_TABLE;
 
 	    $wpdb->query( "TRUNCATE TABLE $this->table_name" );
 
