@@ -162,7 +162,8 @@ class Wp_Crawler_Admin {
 		 * class.
 		 */
 
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/wp-crawler-admin.css', array(), $this->version, 'all' );
+		wp_enqueue_style( $this->plugin_name, WP_CRAWLER_ASSETS_CSS_URL . 'wp-crawler-admin.css', array(), $this->version, 'all' );
+		wp_enqueue_style( 'treeviewjs', WP_CRAWLER_ASSETS_CSS_URL . 'jquery.treeView.css', array(), false, 'all' );
 
 	}
 
@@ -185,7 +186,8 @@ class Wp_Crawler_Admin {
 		 * class.
 		 */
 
-		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/wp-crawler-admin.js', array( 'jquery' ), $this->version, false );
+		wp_enqueue_script( $this->plugin_name, WP_CRAWLER_ASSETS_JS_URL . 'wp-crawler-admin.js', array( 'jquery' ), $this->version, false );
+		wp_enqueue_script( 'treeviewjs', WP_CRAWLER_ASSETS_JS_URL . 'jquery.treeView.js', array( 'jquery' ), false, false );
 
 	}
 
