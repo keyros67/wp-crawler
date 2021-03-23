@@ -136,7 +136,32 @@ class Wp_Crawler_Admin {
 	 *
 	 * @since   1.0.0
 	 */
-	public function load_page_dashboard() {
+	public function page_dashboard() {
+
+		// Update the last crawl date when an crawl is requested
+		if ( isset( $_POST['submit_crawl'] ) ) {
+			update_option( 'wpc_last_crawl', date('Y-m-d H:i:s'), 'no' );
+
+			$this->crawl();
+		}
+
+		// Get the result of the crawl
+		if ( get_option( 'wpc_last_crawl' ) ) {
+			$dashboard_message = '<p>Your pages are updated every hours. Click on the button to update them manually.</p>';
+
+			// Get the crawled pages
+			global $wpdb;
+
+			$pages = $wpdb->get_results("
+				SELECT 		*
+				FROM 		$this->table_name
+				ORDER BY	parent_page_id ASC,
+							page_id ASC
+			;");
+		}
+		else {
+			$dashboard_message = '<p>Welcome on your WP Crawler Dashboard! Run the crawler to start enjoying this nice plugin. Once you run it, it will be automatically scheduled every hours.</p>';
+		}
 
 		include_once WP_CRAWLER_ADMIN_PATH . '/partials/wp-crawler-admin-dashboard.php';
 
