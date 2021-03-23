@@ -97,6 +97,9 @@ class Wp_Crawler_Admin {
 
 	    $page_url = get_site_url();
 
+	    // Call the function to save the html file
+        $this->save_static_page( $page_url, 'homepage' );
+
 	    // Insert the current page in the db
 	    $wpdb->insert($this->table_name, array(
 	            'url'   => $page_url,
@@ -128,6 +131,36 @@ class Wp_Crawler_Admin {
 
 		    }
 	    }
+    }
+
+	/**
+     * Store the page in argument as static page
+	 *
+	 * @since   1.0.0
+	 * @param   $url    url from the page
+     * @param   $name   name of the page
+	 */
+	private function save_static_page( $url, $name ) {
+
+		include_once( WP_CRAWLER_ADMIN_PATH. 'lib/simple_html_dom.php' );
+
+	    $upload_dir = wp_upload_dir();
+		$static_dir = trailingslashit( $upload_dir['basedir'] ) . trailingslashit( 'wpcrawler/static' );
+
+        // Create the directory if not exist
+		if ( !file_exists( $static_dir ) ) {
+			mkdir($static_dir, 0755, true);
+		}
+
+		$file = $name . '.static.html';
+		$html = file_get_html( $url );
+
+		file_put_contents( $static_dir . $file, $html );
+
+		// path to the file
+		$file_path = trailingslashit( $upload_dir['baseurl'] ) . trailingslashit( 'wpcrawler/static' );
+
+		update_option('wpc_' . $name . '_static_url', $file_path . $file );
     }
 
 	/**
