@@ -170,18 +170,22 @@ class Wp_Crawler_Admin {
 	 */
 	public function page_dashboard() {
 
+		if ( get_option( 'wpc_last_crawl' ) ) {
+			$dashboard_message = __( 'Your pages are updated every hours. Click on the button to update them manually.', 'wp-crawler' );
+		} else {
+			$dashboard_message = __( 'Welcome on your WP Crawler Dashboard! Run the crawler to start enjoying this nice plugin. Once you run it, it will be automatically scheduled every hours.', 'wp-crawler' );
+		}
+
 		// Update the last crawl date when an crawl is requested
-		if ( isset( $_POST['submit_crawl'] ) ) {
+		if ( isset( $_POST['submit-crawl'] ) ) {
 			update_option( 'wpc_last_crawl', date('Y-m-d H:i:s'), 'no' );
 
 			$this->crawl();
 		}
 
-		// Get the result of the crawl
-		if ( get_option( 'wpc_last_crawl' ) ) {
-			$dashboard_message = '<p>Your pages are updated every hours. Click on the button to update them manually.</p>';
+		// Display results request
+		if ( isset( $_POST['submit-results'] ) ) {
 
-			// Get the crawled pages
 			global $wpdb;
 
 			$pages = $wpdb->get_results("
@@ -190,9 +194,6 @@ class Wp_Crawler_Admin {
 				ORDER BY	parent_page_id ASC,
 							page_id ASC
 			;");
-		}
-		else {
-			$dashboard_message = '<p>Welcome on your WP Crawler Dashboard! Run the crawler to start enjoying this nice plugin. Once you run it, it will be automatically scheduled every hours.</p>';
 		}
 
 		include_once WP_CRAWLER_ADMIN_PATH . '/partials/wp-crawler-admin-dashboard.php';
@@ -221,6 +222,7 @@ class Wp_Crawler_Admin {
 
 		wp_enqueue_style( $this->plugin_name, WP_CRAWLER_ASSETS_CSS_URL . 'wp-crawler-admin.css', array(), $this->version, 'all' );
 		wp_enqueue_style( 'treeviewjs', WP_CRAWLER_ASSETS_CSS_URL . 'jquery.treeView.css', array(), false, 'all' );
+		wp_enqueue_style( 'bootstrap-icons', 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.0/font/bootstrap-icons.css', array(), false, 'all' );
 
 	}
 
