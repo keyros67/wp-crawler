@@ -1,0 +1,43 @@
+{
+	"name": "wp-media-recruitment/php-assessment-template",
+	"description": "Template for our PHP assessment",
+	"homepage": "https://github.com/wp-media-recruitment/php-assessment-template",
+	"license": "GPL-2.0+",
+	"authors": [
+		{
+			"name": "WP Media",
+			"email": "contact@wp-media.me",
+			"homepage": "https://wp-media.me"
+		}
+	],
+	"type": "library",
+	"config": {
+		"sort-packages": true
+	},
+	"support": {
+		"issues": "https://github.com/wp-media-recruitment/php-assessment-template/issues",
+		"source": "https://github.com/wp-media-recruitment/php-assessment-template"
+	},
+	"require-dev": {
+		"php": "^7",
+		"brain/monkey": "^2",
+		"dealerdirect/phpcodesniffer-composer-installer": "^0.7",
+		"phpcompatibility/phpcompatibility-wp": "^2",
+		"phpunit/phpunit": "^7",
+		"squizlabs/php_codesniffer": "3.*",
+		"wp-coding-standards/wpcs": "^2",
+		"wp-media/phpunit": "^1"
+	},
+	"autoload": {},
+	"autoload-dev": {},
+	"scripts": {
+		"test-unit": "\"vendor/bin/wpmedia-phpunit\" unit path=Tests/Unit",
+		"test-integration": "\"vendor/bin/wpmedia-phpunit\" integration path=Tests/Integration/",
+		"run-tests": [
+			"@test-unit",
+			"@test-integration"
+		],
+		"phpcs": "phpcs --basepath=.",
+		"phpcs:fix": "phpcbf"
+	}
+}
