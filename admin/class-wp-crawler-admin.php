@@ -95,42 +95,58 @@ class Wp_Crawler_Admin {
 
 	    $wpdb->query( "TRUNCATE TABLE $this->table_name" );
 
-	    $page_url = get_site_url();
+	    if ( $wpdb->last_error ) {
 
-	    // Call the function to save the html file
-        $this->save_static_page( $page_url, 'homepage' );
+	        // Notification
+		    update_option( 'wpc_notification', 'The plugin table does not exist. Reinstall the plugin to solve this issue.' );
+		    $this->wpc_crawl_notice_error();
+		    add_action( 'admin_notices', 'crawl_notice_error' );
 
-	    // Insert the current page in the db
-	    $wpdb->insert($this->table_name, array(
-	            'url'   => $page_url,
-            )
-        );
+	    } else {
 
-	    $page_id = $wpdb->insert_id;
+		    $page_url = get_site_url();
 
-        // Get the html of the current page and then the links
-	    $html = file_get_html( $page_url );
+		    // Call the function to save the html file
+	        $this->save_static_page( $page_url, 'homepage' );
 
-	    $links = $html->find( 'a' );
+		    // Insert the current page in the db
+		    $wpdb->insert($this->table_name, array(
+		            'url'   => $page_url,
+	            )
+	        );
 
-	    $parse_page_url = parse_url( $page_url );
+		    $page_id = $wpdb->insert_id;
 
-	    foreach( $links as $link ) {
+	        // Get the html of the current page and then the links
+		    $html = file_get_html( $page_url );
 
-		    $child_page_url = $link->href;
+		    $links = $html->find( 'a' );
 
-		    // Check if the url is from this website with or without http(s), with or without www.
-		    if ( preg_match( '#^(?:https?:\/\/)?(?:www\.)?' . str_replace( '/', '\/', $parse_page_url['host']  . $parse_page_url['path'] ) . '#', $child_page_url) ) {
+		    $parse_page_url = parse_url( $page_url );
 
-		        // Insert the child page in the db
-		        $wpdb->insert($this->table_name, array(
-		                'parent_page_id'    => $page_id,
-                        'url'               => $child_page_url,
-                    )
-                );
+		    foreach( $links as $link ) {
 
-		    }
-	    }
+			    $child_page_url = $link->href;
+
+			    // Check if the url is from this website with or without http(s), with or without www.
+			    if ( preg_match( '#^(?:https?:\/\/)?(?:www\.)?' . str_replace( '/', '\/', $parse_page_url['host']  . $parse_page_url['path'] ) . '#', $child_page_url) ) {
+
+			        // Insert the child page in the db
+			        $wpdb->insert( $this->table_name, array(
+			                'parent_page_id'    => $page_id,
+	                        'url'               => $child_page_url,
+	                    )
+	                );
+		        }
+	        }
+
+		    update_option( 'wpc_last_crawl', date('Y-m-d H:i:s'), 'no' );
+
+		    // Notification
+		    update_option( 'wpc_notification', 'The crawl has started successfully!' );
+			$this->wpc_crawl_notice_success();
+			add_action( 'admin_notices', 'crawl_notice_success' );
+		}
     }
 
 	/**
@@ -199,6 +215,27 @@ class Wp_Crawler_Admin {
 		include_once WP_CRAWLER_ADMIN_PATH . '/partials/wp-crawler-admin-dashboard.php';
 
     }
+
+    public function wpc_crawl_notice_success() {
+
+		$notification = get_option ( 'wpc_notification' );
+
+	    echo '<div class="notice notice-success is-dismissible">';
+	    echo '<p>' . __( $notification, 'wp-crawler' ) . '</p>';
+	    echo '</div>';
+
+    }
+
+	public function wpc_crawl_notice_error() {
+
+		$notification = get_option ( 'wpc_notification' );
+
+		echo '<div class="notice notice-error is-dismissible">';
+		echo '<p>' . __( $notification, 'wp-crawler' ) . '</p>';
+		echo '</div>';
+
+	}
+
 
 
 	/**
