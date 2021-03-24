@@ -38,3 +38,17 @@ $table_name = $wpdb->prefix . WP_CRAWLER_TABLE;
 
 $sql = "DROP TABLE IF EXISTS $table_name";
 $wpdb->query( $sql );
+
+
+// Clean up our settings
+$setting_options = array( 'wpc_last_crawl', 'wpc_homepage_static_url', 'wpc_notification' );
+
+foreach ( $setting_options as $option ) {
+	delete_option( $option );
+}
+
+// Clean up the cron
+if ( wp_next_scheduled( 'wpc_crawl' ) ) {
+	$timestamp = wp_next_scheduled( 'wpc_crawl' );
+	wp_unschedule_event( $timestamp, 'wpc_crawl' );
+}

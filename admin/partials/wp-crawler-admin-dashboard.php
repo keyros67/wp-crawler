@@ -3,15 +3,15 @@
 ?>
 
 <div class="wrap">
-    <h1><?php echo __('WP Crawler Dashboard', 'wp-crawler' ); ?></h1>
+    <h1><?php echo __( 'WP Crawler Dashboard', 'wp-crawler' ); ?></h1>
 </div>
 <br>
 <div class="wrap">
-    <h2 class="wpc-h2 underline"><i class="bi bi-gear"></i> <?php echo __('Crawler', 'wp-crawler' ); ?></h2>
+    <h2 class="wpc-h2 underline"><i class="bi bi-gear"></i> <?php echo __( 'Crawler', 'wp-crawler' ); ?></h2>
 	<p><?php echo $dashboard_message; ?></p>
     <div id="submit_crawl">
         <form  method="post">
-            <p><?php submit_button(__( 'Crawl Now!', 'wp-crawler' ), 'primary', 'submit-crawl',  false); ?></p>
+            <p><?php submit_button( __( 'Crawl Now!', 'wp-crawler' ), 'primary', 'submit-crawl',  false ); ?></p>
         </form>
     </div>
 </div>
@@ -21,12 +21,12 @@
 if ( get_option( 'wpc_last_crawl' ) ) {
 ?>
 <div class="wrap">
-    <h2 class="wpc-h2 underline"><i class="bi bi-globe"></i> <?php echo __('Website Pages', 'wp-crawler' ); ?></h2>
-    <p><?php echo __( 'Click on the button below to display the result of the last crawl.', 'wp-crawler'); ?></p>
+    <h2 class="wpc-h2 underline"><i class="bi bi-globe"></i> <?php echo __( 'Website Pages', 'wp-crawler' ); ?></h2>
+    <p><?php echo __( 'Click on the button below to display the result of the last crawl.', 'wp-crawler' ); ?></p>
     <div class="wpc-flex">
         <div id="submit_results">
             <form  method="post">
-                <p><?php submit_button(__( 'Show pages', 'wp-crawler' ), 'primary', 'submit-results', false ); ?></p>
+                <p><?php submit_button( __( 'Show pages', 'wp-crawler' ), 'primary', 'submit-results', false ); ?></p>
             </form>
         </div>
 

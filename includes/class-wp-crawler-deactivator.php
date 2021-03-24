@@ -31,6 +31,11 @@ class Wp_Crawler_Deactivator {
 	 */
 	public static function deactivate() {
 
+		// Clean up the cron
+		if ( wp_next_scheduled( 'wpc_crawl' ) ) {
+			$timestamp = wp_next_scheduled( 'wpc_crawl' );
+			wp_unschedule_event( $timestamp, 'wpc_crawl' );
+		}
 	}
 
 }

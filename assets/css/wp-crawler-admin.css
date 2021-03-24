@@ -19,7 +19,6 @@
 }
 
 .wpc-flex {
-
     display: flex;
     justify-content: flex-start;
     align-items: flex-start;
@@ -28,8 +27,7 @@
 #submit-crawl {
     margin-top: 12px;
 }
+
 #submit-results {
     margin-right: 10px;
 }
-
-

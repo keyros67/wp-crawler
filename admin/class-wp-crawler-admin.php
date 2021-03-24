@@ -63,6 +63,9 @@ class Wp_Crawler_Admin {
 
 		global $wpdb;
 		$this->table_name = $wpdb->prefix . WP_CRAWLER_TABLE;
+
+		// Add the cron hook
+		add_action( 'wpc_crawl', array( $this, 'crawl' ) );
 	}
 
 
@@ -87,7 +90,7 @@ class Wp_Crawler_Admin {
 	 *
 	 * @since   1.0.0
 	 */
-	private function crawl() {
+	 public function crawl() {
 
 	    include_once( WP_CRAWLER_ADMIN_PATH. 'lib/simple_html_dom.php' );
 
@@ -186,17 +189,21 @@ class Wp_Crawler_Admin {
 	 */
 	public function page_dashboard() {
 
-		if ( get_option( 'wpc_last_crawl' ) ) {
-			$dashboard_message = __( 'Your pages are updated every hours. Click on the button to update them manually.', 'wp-crawler' );
-		} else {
-			$dashboard_message = __( 'Welcome on your WP Crawler Dashboard! Run the crawler to start enjoying this nice plugin. Once you run it, it will be automatically scheduled every hours.', 'wp-crawler' );
-		}
-
 		// Update the last crawl date when an crawl is requested
 		if ( isset( $_POST['submit-crawl'] ) ) {
-			update_option( 'wpc_last_crawl', date('Y-m-d H:i:s'), 'no' );
 
 			$this->crawl();
+
+			// If the crawl is scheduled, remove the cron task
+			if ( wp_next_scheduled( 'wpc_crawl' ) ) {
+				$timestamp = wp_next_scheduled( 'wpc_crawl' );
+				wp_unschedule_event( $timestamp, 'wpc_crawl' );
+			}
+
+			// Schedule the cron task every hour
+			wp_schedule_event( time() + 3600, 'hourly', 'wpc_crawl' );
+
+
 		}
 
 		// Display results request
@@ -204,12 +211,19 @@ class Wp_Crawler_Admin {
 
 			global $wpdb;
 
-			$pages = $wpdb->get_results("
+			$pages = $wpdb->get_results( "
 				SELECT 		*
 				FROM 		$this->table_name
 				ORDER BY	parent_page_id ASC,
 							page_id ASC
-			;");
+			;" );
+		}
+
+		// Dashboard message
+		if ( get_option( 'wpc_last_crawl' ) ) {
+			$dashboard_message = __( 'Your pages are updated every hour. Click on the button to update them manually.', 'wp-crawler' );
+		} else {
+			$dashboard_message = __( 'Welcome to your WP Crawler Dashboard! Run the crawler to start enjoying this nice plugin. Once you run it, it will be automatically scheduled every hour.', 'wp-crawler' );
 		}
 
 		include_once WP_CRAWLER_ADMIN_PATH . '/partials/wp-crawler-admin-dashboard.php';
