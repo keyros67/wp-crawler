@@ -96,7 +96,8 @@ class Wp_Crawler_Admin {
 
 	    global $wpdb;
 
-	    $wpdb->query( "TRUNCATE TABLE $this->table_name" );
+		// Delete previous results.
+		$wpdb->query( "TRUNCATE TABLE $this->table_name" );
 
 	    if ( $wpdb->last_error ) {
 
@@ -105,18 +106,22 @@ class Wp_Crawler_Admin {
 		    $this->wpc_crawl_notice_error();
 		    add_action( 'admin_notices', 'crawl_notice_error' );
 
-	    } else {
+		} else {
+			$this->delete_sitemap_html();
 
 		    $page_url = get_site_url();
 
 		    // Call the function to save the html file
 	        $this->save_static_page( $page_url, 'homepage' );
 
-		    // Insert the current page in the db
-		    $wpdb->insert($this->table_name, array(
-		            'url'   => $page_url,
-	            )
-	        );
+			// Insert the current page in the db.
+			$wpdb->insert(
+				$this->table_name,
+				[
+					'title' => $this->get_webpage_title( $page_url ),
+					'url'   => $page_url,
+				]
+			);
 
 		    $page_id = $wpdb->insert_id;
 
@@ -134,23 +139,49 @@ class Wp_Crawler_Admin {
 			    // Check if the url is from this website with or without http(s), with or without www.
 			    if ( preg_match( '#^(?:https?:\/\/)?(?:www\.)?' . str_replace( '/', '\/', $parse_page_url['host']  . $parse_page_url['path'] ) . '#', $child_page_url) ) {
 
-			        // Insert the child page in the db
-			        $wpdb->insert( $this->table_name, array(
-			                'parent_page_id'    => $page_id,
-	                        'url'               => $child_page_url,
-	                    )
-	                );
-		        }
-	        }
+					// Insert the child page in the db
+					$wpdb->insert(
+						$this->table_name,
+						[
+							'parent_page_id' => $page_id,
+							'title'          => $this->get_webpage_title( $child_page_url ),
+							'url'            => $child_page_url,
+						]
+					);
+				}
+			}
 
-		    update_option( 'wpc_last_crawl', date('Y-m-d H:i:s'), 'no' );
+			// Create the sitemap.html.
+			$this->create_sitemap_html();
+
+			update_option( 'wpc_last_crawl', date( 'Y-m-d H:i:s' ), 'no' );
 
 		    // Notification
 		    update_option( 'wpc_notification', 'The crawl has started successfully!' );
 			$this->wpc_crawl_notice_success();
 			add_action( 'admin_notices', 'crawl_notice_success' );
 		}
-    }
+	}
+
+	/**
+	 * Return the title of a webpage
+	 *
+	 * @since   1.0.0
+	 * @param   string $url Webpage url
+	 * @return  string      Return the title of the page
+	 */
+	private function get_webpage_title( $url ) {
+
+		$page = file_get_contents( $url );
+
+		if ( preg_match( '/<title[^>]*>(.*?)<\/title>/ims', $page, $match ) ) {
+			$title = html_entity_decode( $match[1] );
+		} else {
+			$title = '';
+		}
+
+		return $title;
+	}
 
 	/**
      * Store the page in argument as static page
@@ -181,6 +212,101 @@ class Wp_Crawler_Admin {
 
 		update_option('wpc_' . $name . '_static_url', $file_path . $file );
     }
+
+	/**
+	 * Create the sitemap.html file
+	 *
+	 * @since   1.0.0
+	 */
+	private function create_sitemap_html() {
+
+		// Get the template.
+		$html = file_get_contents( wp_normalize_path( trailingslashit( WP_CRAWLER_ADMIN_PATH ) . 'lib/template-sitemap.html' ) );
+
+		// Set the page html language.
+		$html = str_replace( '{{ WPC_LANGUAGE }}', get_language_attributes(), $html );
+
+		// Set the page title.
+		$html = str_replace( '{{ WPC_SITEMAP_TITLE }}', __( 'Sitemap.html', 'wp-crawler' ), $html );
+
+		global $wpdb;
+
+		$homepage = $wpdb->get_row(
+			"
+					SELECT  *
+					FROM 	$this->table_name
+					WHERE	parent_page_id IS NULL
+				;"
+		);
+
+		$formatted_url    = untrailingslashit( strtolower( strtok( $homepage->url, '#' ) ) );
+		$formatted_urls[] = $formatted_url;
+
+		$content  = '<ul>' . PHP_EOL;
+		$content .= '<i class="bi bi-house wpc-list-icon"></i> <a class="wpc-pages-link" href="' . $formatted_url . '">' . $homepage->title . '</a>' . PHP_EOL;
+		$content .= '<ul>' . PHP_EOL;
+
+		$pages = $wpdb->get_results(
+			"
+					SELECT  	*
+					FROM 		$this->table_name
+					WHERE		parent_page_id IS NOT NULL
+					ORDER BY	parent_page_id ASC,
+					            title ASC
+				;"
+		);
+
+		$formatted_pages = [];
+
+		foreach ( $pages as $page ) {
+
+			$formatted_url = untrailingslashit( strtolower( strtok( $page->url, '#' ) ) );
+
+			if ( ! in_array( $formatted_url, $formatted_urls ) ) {
+
+				$formatted_urls[] = $formatted_url;
+
+				$formatted_pages[ $page->page_id ]['url'] = $formatted_url;
+
+				if ( trim( $page->title ) != '' ) {
+					$formatted_pages[ $page->page_id ]['anchor'] = $page->title;
+				} else {
+					$formatted_pages[ $page->page_id ]['anchor'] = $page->url;
+				}
+			}
+		}
+
+		foreach ( $formatted_pages as $formatted_page ) {
+
+			$content .= '<li><i class="bi bi-link-45deg wpc-list-icon"></i> <a class="wpc-pages-link" href="' . $formatted_page['url'] . '">' . $formatted_page['anchor'] . '</a></li>' . PHP_EOL;
+
+		}
+
+		$content .= '</li>' . PHP_EOL;
+
+		$content .= '</ul>' . PHP_EOL;
+
+		// Set the page content.
+		$html = str_replace( '{{ WPC_SITEMAP_CONTENT }}', $content, $html );
+
+		$wp_dir = trailingslashit( get_home_path() );
+		file_put_contents( $wp_dir . 'sitemap.html', $html );
+	}
+
+	/**
+	 * Delete the sitemap.html file
+	 *
+	 * @since   1.0.0
+	 */
+	private function delete_sitemap_html() {
+
+		$wp_dir = trailingslashit( get_home_path() );
+
+		if ( file_exists( $wp_dir . 'sitemap.html' ) ) {
+			unlink( $wp_dir . 'sitemap.html' );
+		}
+
+	}
 
 	/**
 	 * Load the dashboard page

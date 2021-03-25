@@ -41,7 +41,11 @@ $wpdb->query( $sql );
 
 
 // Clean up our settings
-$setting_options = array( 'wpc_last_crawl', 'wpc_homepage_static_url', 'wpc_notification' );
+$setting_options = [
+	'wpc_last_crawl',
+	'wpc_homepage_static_url',
+	'wpc_notification'
+];
 
 foreach ( $setting_options as $option ) {
 	delete_option( $option );
@@ -51,4 +55,11 @@ foreach ( $setting_options as $option ) {
 if ( wp_next_scheduled( 'wpc_crawl' ) ) {
 	$timestamp = wp_next_scheduled( 'wpc_crawl' );
 	wp_unschedule_event( $timestamp, 'wpc_crawl' );
+}
+
+// Delete the sitemap.html.
+$wp_dir = trailingslashit( get_home_path() );
+
+if ( file_exists( $wp_dir . 'sitemap.html' ) ) {
+	unlink( $wp_dir . 'sitemap.html' );
 }
