@@ -16,20 +16,10 @@
 	background-size: 24px 24px;
 }
 
-.treeview span.has-node-icon {
-	text-indent: 2%;
-	margin-top:0.2em;
-	padding:0.15em 0 0.5em 2.0em;
-	background-repeat:no-repeat;
-	/* adjust according to node image */
-	line-height: 22px;
-	background-size: 24px 24px;
-}
-
 /* node icons */
 .treeview li.contains-items {
 	background-image: url('../img/arrow-left.png');
-} 
+}
 
 .treeview li.items-expanded {
 	background-image: url('../img/arrow-down.png');
@@ -40,7 +30,3 @@
 	cursor: pointer;
 }
 
-/* optional hover */
-.treeview span:not(span.has-node-icon):hover{
-	background-color: rgba(246, 246, 246, 0.7);
-}

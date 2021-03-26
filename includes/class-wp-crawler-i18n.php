@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Define the internationalization functionality
  *
@@ -24,7 +23,7 @@
  * @subpackage Wp_Crawler/includes
  * @author     Hervé Villemin <herve@villemin.co>
  */
-class Wp_Crawler_i18n {
+class Wp_Crawler_I18n {
 
 
 	/**

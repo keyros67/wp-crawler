@@ -4,8 +4,10 @@
     // TreeViewJS
     $(function() {
 
-        $('.treeview').treeView();
-        $('.treeview').treeView('expandAll');
+    $('.treeview')
+        .treeView()
+        .treeView('expandAll')
+        ;
     });
 
 })( jQuery );

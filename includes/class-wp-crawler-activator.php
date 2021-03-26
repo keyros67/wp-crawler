@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Fired during plugin activation
  *
@@ -31,7 +30,7 @@ class Wp_Crawler_Activator {
 	 */
 	public static function activate() {
 
-		// Database creation
+		// Database creation.
 		global $wpdb;
 		$charset_collate = $wpdb->get_charset_collate();
 
@@ -46,9 +45,9 @@ class Wp_Crawler_Activator {
 	    		CONSTRAINT FK_ParentPage FOREIGN KEY (parent_page_id) REFERENCES $table_name(page_id)
 	    ) $charset_collate;";
 
-		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		maybe_create_table( $table_name, $sql );
 
 	}
 }
-      
+

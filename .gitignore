@@ -19,6 +19,7 @@ node_modules/
 
 # ignore log files and databases
 *.log
+*.prettierrc
 *.sql
 *.sqlite
 /.idea/

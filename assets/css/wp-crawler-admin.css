@@ -1,33 +1,34 @@
+.wpc-wrap {
+	padding: 10px 30px;
+	font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
+}
+
 .wpc-h2 {
-    font-size: 20px !important;
-    font-weight: bold !important;
-    color: #1082c8;
-    margin-bottom: 20px !important;
+	font-size: 20px !important;
+	font-weight: bold !important;
+	color: #1082c8;
+	margin-bottom: 20px !important;
 }
 
 .underline {
-    border-bottom: 2px solid #1082c8;
-    width: 35%;
+	border-bottom: 2px solid #1082c8;
+	width: 35%;
 }
 
 .external-link {
-    color: #1082c8;
-}
-
-.wpc-btn-blue {
-    background-color: #1082c8 !important;
+	color: #1082c8;
 }
 
 .wpc-flex {
-    display: flex;
-    justify-content: flex-start;
-    align-items: flex-start;
+	display: flex;
+	justify-content: flex-start;
+	align-items: flex-start;
 }
 
 #submit-crawl {
-    margin-top: 12px;
+	margin-top: 12px;
 }
 
-#submit-results {
-    margin-right: 10px;
+#show-results, #show-static {
+	margin-right: 8px;
 }

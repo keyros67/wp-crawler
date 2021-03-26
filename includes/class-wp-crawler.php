@@ -1,5 +1,4 @@
 <?php
-
 /**
  * The file that defines the core plugin class
  *
@@ -87,7 +86,7 @@ class Wp_Crawler {
 	 * Include the following files that make up the plugin:
 	 *
 	 * - Wp_Crawler_Loader. Orchestrates the hooks of the plugin.
-	 * - Wp_Crawler_i18n. Defines internationalization functionality.
+	 * - Wp_Crawler_I18n. Defines internationalization functionality.
 	 * - Wp_Crawler_Admin. Defines all hooks for the admin area.
 	 * - Wp_Crawler_Public. Defines all hooks for the public side of the site.
 	 *
@@ -137,7 +136,7 @@ class Wp_Crawler {
 	 */
 	private function set_locale() {
 
-		$plugin_i18n = new Wp_Crawler_i18n();
+		$plugin_i18n = new Wp_Crawler_I18n();
 
 		$this->loader->add_action( 'plugins_loaded', $plugin_i18n, 'load_plugin_textdomain' );
 
@@ -157,7 +156,7 @@ class Wp_Crawler {
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 
-		// Add the admin menu
+		// Add the admin menu.
 		$this->loader->add_action( 'admin_menu', $plugin_admin, 'create_menu' );
 
 	}

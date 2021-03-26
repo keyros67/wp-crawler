@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Fired when the plugin is uninstalled.
  *
@@ -30,28 +29,31 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
 }
 
-// DB table deletion
-// TODO: Add some security checks
+// DB table deletion.
+// TODO: Add some security checks.
 global $wpdb;
 
 $table_name = $wpdb->prefix . WP_CRAWLER_TABLE;
 
-$sql = "DROP TABLE IF EXISTS $table_name";
-$wpdb->query( $sql );
+$wpdb->query(
+	$wpdb->prepare(
+		'DROP TABLE IF EXISTS %s',
+		$table_name
+	)
+);
 
 
-// Clean up our settings
+// Clean up our settings.
 $setting_options = [
 	'wpc_last_crawl',
 	'wpc_homepage_static_url',
-	'wpc_notification'
 ];
 
 foreach ( $setting_options as $option ) {
 	delete_option( $option );
 }
 
-// Clean up the cron
+// Clean up the cron.
 if ( wp_next_scheduled( 'wpc_crawl' ) ) {
 	$timestamp = wp_next_scheduled( 'wpc_crawl' );
 	wp_unschedule_event( $timestamp, 'wpc_crawl' );
