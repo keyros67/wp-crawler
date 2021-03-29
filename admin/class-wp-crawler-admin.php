@@ -94,17 +94,90 @@ class Wp_Crawler_Admin {
 	}
 
 	/**
+	 * Load the dashboard page
+	 *
+	 * @since   1.0.0
+	 */
+	public function page_dashboard() {
+
+		// Dashboard message.
+		if ( get_option( 'wpc_last_crawl' ) ) {
+			$dashboard_message = __( 'Your pages are updated every hour. Click on the button to update them manually.', 'wp-crawler' );
+		} else {
+			$dashboard_message = __( 'Welcome to your WP Crawler Dashboard! Run the crawler to start enjoying this nice plugin. Once you run it, it will be automatically scheduled every hour.', 'wp-crawler' );
+		}
+
+		// Crawl requested.
+		if ( isset( $_POST['submit-crawl'] ) ) {
+
+			if ( ! isset( $_POST['nonce_crawl'] ) || ! wp_verify_nonce( $_POST['nonce_crawl'], 'submit_crawl' ) ) {
+
+				// Notification .
+				$notification = __( 'Access denied.', 'wp-crawler' );
+				$this->wpc_crawl_notice_error( $notification );
+
+				wp_die();
+
+			} else {
+
+				// Crawl the site starting on the homepage.
+				$this->crawl( get_site_url() );
+
+				// Add the cron task.
+				$cron_task = $this->set_cron_task( $this->cron_name );
+
+				// Notification on error.
+				if ( false === $cron_task ) {
+					// Notification on error.
+					$notification = __( 'The plugin was not able to schedule your crawl. Please reinstall the plugin to fix this issue.', 'wp-crawler' );
+					$this->wpc_crawl_notice_error( $notification );
+				}
+			}
+		}
+
+		// Display results on request.
+		if ( isset( $_POST['submit-results'] ) ) {
+
+			if ( ! isset( $_POST['nonce_results'] ) || ! wp_verify_nonce( $_POST['nonce_results'], 'show_results' ) ) {
+
+				// Notification .
+				$notification = __( 'Access denied.', 'wp-crawler' );
+				$this->wpc_crawl_notice_error( $notification );
+
+				wp_die();
+
+			} else {
+
+				global $wpdb;
+
+				$webpages = $wpdb->get_results(
+					'
+					SELECT 		*
+					FROM 		' . esc_sql( $this->table_name ) . '
+					ORDER BY	parent_page_id ASC,
+								page_id ASC
+					;'
+				); // db call ok; no-cache ok.
+			}
+		}
+
+		include_once WP_CRAWLER_ADMIN_PATH . '/partials/wp-crawler-admin-dashboard.php';
+	}
+
+	/**
 	 * Main function that crawl the website.
 	 *
 	 * @param   string $page_url   Crawl starting page.
 	 *
 	 * @since   1.0.0
 	 */
-	public function crawl() {
+	public function crawl( string $page_url = '' ) {
 
 		include_once WP_CRAWLER_ADMIN_PATH . 'lib/simple_html_dom.php';
 
-		global $wpdb;
+		if ( empty( $page_url ) ) {
+			$page_url = get_site_url();
+		}
 
 		// Delete previous results.
 		$wpdb->query( 'TRUNCATE TABLE ' . esc_sql( $this->table_name ) . ';' );
