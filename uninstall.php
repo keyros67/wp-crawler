@@ -81,6 +81,8 @@ $setting_options = [
 ];
 
 foreach ( $setting_options as $option ) {
-	delete_option( $option );
+	if ( get_option( $option ) ) {
+		delete_option( $option );
+	}
 }
 
