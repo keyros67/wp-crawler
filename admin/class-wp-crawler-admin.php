@@ -49,6 +49,15 @@ class Wp_Crawler_Admin {
 	private $table_name;
 
 	/**
+	 * The name of the cron task.
+	 *
+	 * @since   1.0.0
+	 * @access  private
+	 * @var     string $cron_name    The cron name.
+	 */
+	private $cron_name;
+
+	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since   1.0.0
@@ -62,9 +71,10 @@ class Wp_Crawler_Admin {
 
 		global $wpdb;
 		$this->table_name = $wpdb->prefix . WP_CRAWLER_TABLE;
+		$this->cron_name  = 'wpc_crawl';
 
 		// Add the cron hook.
-		add_action( 'wpc_crawl', [ $this, 'crawl' ] );
+		add_action( $this->cron_name, [ $this, 'crawl' ] );
 	}
 
 
@@ -85,7 +95,7 @@ class Wp_Crawler_Admin {
 	}
 
 	/**
-	 * Crawl the website
+	 * Main function that crawl the website.
 	 *
 	 * @since   1.0.0
 	 */
@@ -239,7 +249,7 @@ class Wp_Crawler_Admin {
 			WHERE 	parent_page_id IS NULL
 			;
 			'
-		);
+		); // db call ok; no-cache ok.
 
 		$formatted_url    = untrailingslashit( strtolower( strtok( $homepage->url, '#' ) ) );
 		$formatted_urls[] = $formatted_url;
@@ -257,7 +267,7 @@ class Wp_Crawler_Admin {
 				ORDER BY	parent_page_id ASC,
 				            title ASC
 			;'
-		);
+		); // db call ok; no-cache ok.
 
 		$formatted_pages = [];
 
@@ -312,74 +322,29 @@ class Wp_Crawler_Admin {
 	}
 
 	/**
-	 * Load the dashboard page
+	 * Add the crawl to the WordPress cron.
 	 *
+	 * @param   string $name    Name of the cron task.
+	 *
+	 * @return  bool            Return true if the cron task was scheduled, false if not.
 	 * @since   1.0.0
 	 */
-	public function page_dashboard() {
+	private function set_cron_task( string $name ): bool {
 
-		// Update the last crawl date when an crawl is requested.
-		if ( isset( $_POST['submit-crawl'] ) ) {
-
-			if ( ! wp_verify_nonce( $_POST['nonce_crawl'], 'submit_crawl' ) ) {
-
-				// Notification .
-				$notification = __( 'Access denied.', 'wp-crawler' );
-				$this->wpc_crawl_notice_error( $notification );
-				add_action( 'admin_notices', 'crawl_notice_error' );
-
-				wp_die();
-			} else {
-
-				$this->crawl();
-
-				// If the crawl is scheduled, remove the cron task.
-				if ( wp_next_scheduled( 'wpc_crawl' ) ) {
-					$timestamp = wp_next_scheduled( 'wpc_crawl' );
-					wp_unschedule_event( $timestamp, 'wpc_crawl' );
-				}
-
-				// Schedule the cron task every hour.
-				wp_schedule_event( time() + 3600, 'hourly', 'wpc_crawl' );
-
-			}
+		// If the crawl is scheduled, remove the cron task.
+		if ( wp_next_scheduled( $name ) ) {
+			$timestamp = wp_next_scheduled( $name );
+			wp_unschedule_event( $timestamp, $name );
 		}
 
-		// Display results request.
-		if ( isset( $_POST['submit-results'] ) ) {
+		// Schedule the cron task every hour.
+		$is_cron_scheduled = wp_schedule_event( time() + 3600, 'hourly', $name );
 
-			if ( ! wp_verify_nonce( $_POST['nonce_results'], 'show_results' ) ) {
-
-				// Notification .
-				$notification = __( 'Access denied.', 'wp-crawler' );
-				$this->wpc_crawl_notice_error( $notification );
-				add_action( 'admin_notices', 'crawl_notice_error' );
-
-				wp_die();
-
-			} else {
-
-				global $wpdb;
-
-				$webpages = $wpdb->get_results(
-					'
-					SELECT 		*
-					FROM 		' . esc_sql( $this->table_name ) . '
-					ORDER BY	parent_page_id ASC,
-								page_id ASC
-					;'
-				);
-			}
-		}
-
-		// Dashboard message.
-		if ( get_option( 'wpc_last_crawl' ) ) {
-			$dashboard_message = __( 'Your pages are updated every hour. Click on the button to update them manually.', 'wp-crawler' );
+		if ( true === $is_cron_scheduled ) {
+			return true;
 		} else {
-			$dashboard_message = __( 'Welcome to your WP Crawler Dashboard! Run the crawler to start enjoying this nice plugin. Once you run it, it will be automatically scheduled every hour.', 'wp-crawler' );
+			return false;
 		}
-
-		include_once WP_CRAWLER_ADMIN_PATH . '/partials/wp-crawler-admin-dashboard.php';
 	}
 
 	/**
