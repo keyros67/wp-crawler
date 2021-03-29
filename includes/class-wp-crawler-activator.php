@@ -37,13 +37,13 @@ class Wp_Crawler_Activator {
 		$table_name = $wpdb->prefix . WP_CRAWLER_TABLE;
 
 		$sql = "CREATE TABLE $table_name (
-	    		page_id bigint(20) NOT NULL AUTO_INCREMENT,
-	    		parent_page_id bigint(20) NULL,
-	    		title text NULL,
-	    		url  text NOT NULL,
-	    		PRIMARY KEY (page_id),
-	    		CONSTRAINT FK_ParentPage FOREIGN KEY (parent_page_id) REFERENCES $table_name(page_id)
-	    ) $charset_collate;";
+		            page_id bigint(20) NOT NULL AUTO_INCREMENT,
+		            parent_page_id bigint(20) NULL,
+		            title text NULL,
+		            url  text NOT NULL,
+		            PRIMARY KEY (page_id),
+		            CONSTRAINT FK_ParentPage FOREIGN KEY (parent_page_id) REFERENCES $table_name(page_id)
+	    		) $charset_collate;";
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		maybe_create_table( $table_name, $sql );

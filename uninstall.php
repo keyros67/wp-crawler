@@ -29,8 +29,7 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
 }
 
-// DB table deletion.
-// TODO: Add some security checks.
+// Clean up the database.
 global $wpdb;
 
 $table_name = $wpdb->prefix . WP_CRAWLER_TABLE;
@@ -42,26 +41,51 @@ $wpdb->query(
 	)
 );
 
-
-// Clean up our settings.
-$setting_options = [
-	'wpc_last_crawl',
-	'wpc_homepage_static_url',
-];
-
-foreach ( $setting_options as $option ) {
-	delete_option( $option );
-}
-
 // Clean up the cron.
 if ( wp_next_scheduled( 'wpc_crawl' ) ) {
 	$timestamp = wp_next_scheduled( 'wpc_crawl' );
 	wp_unschedule_event( $timestamp, 'wpc_crawl' );
 }
 
-// Delete the sitemap.html.
-$wp_dir = trailingslashit( get_home_path() );
+// Clean up the uploads folder.
+$upload_dir  = wp_upload_dir();
+$wpcrawler_dir  = trailingslashit( $upload_dir['basedir'] ) . trailingslashit( 'wpcrawler' );
 
-if ( file_exists( $wp_dir . 'sitemap.html' ) ) {
-	unlink( $wp_dir . 'sitemap.html' );
+if ( is_dir( $wpcrawler_dir ) ) {
+
+	// Remove the static directory and his content.
+	$static_dir = trailingslashit( $wpcrawler_dir ) . trailingslashit( 'static' );
+
+	if ( is_dir( $static_dir ) ) {
+		$files = scandir( $static_dir );
+
+		if ( ! empty( $file ) ) {
+			foreach ( $files as $file ) {
+				unlink( $file );
+			}
+		}
+		rmdir( $static_dir );
+	}
+
+	// Remove the wpcrawler dir and his content.
+	$files = scandir( $wpcrawler_dir );
+
+	if ( ! empty( $file ) ) {
+		foreach ( $files as $file ) {
+			unlink( $file );
+		}
+	}
+	rmdir( $wpcrawler_dir );
 }
+
+// Clean up our settings.
+$setting_options = [
+	'wpc_last_crawl',
+	'wpc_homepage_static_url',
+	'wpc_sitemap_path',
+];
+
+foreach ( $setting_options as $option ) {
+	delete_option( $option );
+}
+
