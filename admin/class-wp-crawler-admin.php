@@ -373,23 +373,7 @@ class Wp_Crawler_Admin {
 		$content .= '<i class="bi bi-house wpc-list-icon"></i> <a class="wpc-pages-link" href="' . $formatted_url . '">' . $homepage->title . '</a>' . PHP_EOL;
 		$content .= '<ul class="wpc-list">' . PHP_EOL;
 
-		$webpages = $wpdb->get_results(
-			'
-				SELECT  	*
-				FROM 		' . esc_sql( $this->table_name ) . '
-				WHERE		parent_page_id IS NOT NULL
-				ORDER BY	parent_page_id ASC,
-				            title ASC
-			;'
-		); // db call ok; no-cache ok.
-
-		$formatted_pages = [];
-
-		foreach ( $webpages as $webpage ) {
-
-			$formatted_url = untrailingslashit( strtolower( strtok( $webpage->url, '#' ) ) );
-
-			if ( ! in_array( $formatted_url, $formatted_urls, true ) ) {
+		$webpages = $this->get_crawl_results( false );
 
 				$formatted_urls[] = $formatted_url;
 
@@ -476,21 +460,35 @@ class Wp_Crawler_Admin {
 	/**
 	 * Get the crawl results stored in the database.
 	 *
+	 * @param   bool $homepage  Set to true to include the homepage in the results.
+	 *
 	 * @return  array           Return an array with the pages.
 	 * @since   1.0.0
 	 */
-	private function get_crawl_results(): array {
+	private function get_crawl_results( bool $homepage = true ): array {
 
 		global $wpdb;
 
-		$pages = $wpdb->get_results(
-			'
-					SELECT 		*
-					FROM 		' . esc_sql( $this->table_name ) . '
-					ORDER BY	parent_page_id ASC,
-								page_id ASC
-					;'
-		); // db call ok; no-cache ok.
+		if ( false === $homepage ) {
+			$pages = $wpdb->get_results(
+				'
+				SELECT 		*
+			    FROM 		' . esc_sql( $this->table_name ) . '
+				WHERE       parent_page_id IS NOT NULL
+				ORDER BY	parent_page_id ASC,
+				            title ASC
+				;'
+			); // db call ok; no-cache ok.
+		} else {
+			$pages = $wpdb->get_results(
+				'
+				SELECT 		*
+			    FROM 		' . esc_sql( $this->table_name ) . '
+				ORDER BY	parent_page_id ASC,
+							page_id ASC
+				;'
+			); // db call ok; no-cache ok.
+		}
 
 		return $pages;
 	}

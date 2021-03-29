@@ -53,9 +53,6 @@ if ( isset( $webpages ) && ! empty( $webpages ) ) {
 	<ul class="treeview">
 	<?php
 	foreach ( $webpages as $webpage ) {
-		?>
-
-		<?php
 		if ( is_null( $webpage->parent_page_id ) ) {
 			echo '<li>' . esc_html( $webpage->url ) . ' <a href="' . esc_html( $webpage->url ) . '" target="_blank"><i class="bi bi-box-arrow-up-right external-link"></i></a>';
 			echo '<ul>';
