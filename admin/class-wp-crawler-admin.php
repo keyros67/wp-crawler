@@ -375,17 +375,7 @@ class Wp_Crawler_Admin {
 
 		$webpages = $this->get_crawl_results( false );
 
-				$formatted_urls[] = $formatted_url;
-
-				$formatted_pages[ $webpage->page_id ]['url'] = $formatted_url;
-
-				if ( trim( $webpage->title ) !== '' ) {
-					$formatted_pages[ $webpage->page_id ]['anchor'] = $webpage->title;
-				} else {
-					$formatted_pages[ $webpage->page_id ]['anchor'] = $webpage->url;
-				}
-			}
-		}
+		$formatted_pages = $this->remove_duplicate_pages( $webpages, $formatted_urls );
 
 		foreach ( $formatted_pages as $formatted_page ) {
 
@@ -491,6 +481,38 @@ class Wp_Crawler_Admin {
 		}
 
 		return $pages;
+	}
+
+	/**
+	 * Return an array of unique internal pages
+	 *
+	 * @param   array $pages    Array of pages.
+	 * @param   array $urls     Array of urls already defined.
+	 *
+	 * @return  array           Array of unique internal pages.
+	 */
+	private function remove_duplicate_pages( array $pages, array $urls = [] ): array {
+
+		$formatted_pages = [];
+
+		foreach ( $pages as $page ) {
+
+			$formatted_url = untrailingslashit( strtolower( strtok( $page->url, '#' ) ) );
+
+			if ( ! in_array( $formatted_url, $urls, true ) ) {
+
+				$urls[] = $formatted_url;
+
+				$formatted_pages[ $page->page_id ]['url'] = $formatted_url;
+
+				if ( trim( $page->title ) !== '' ) {
+					$formatted_pages[ $page->page_id ]['anchor'] = $page->title;
+				} else {
+					$formatted_pages[ $page->page_id ]['anchor'] = $page->url;
+				}
+			}
+		}
+		return $formatted_pages;
 	}
 
 	/**
