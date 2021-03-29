@@ -302,8 +302,22 @@ class Wp_Crawler_Admin {
 		// Set the page content.
 		$html = str_replace( '{{ WPC_SITEMAP_CONTENT }}', $content, $html );
 
-		$wp_dir = trailingslashit( get_home_path() );
-		file_put_contents( $wp_dir . 'sitemap.html', $html );
+		// Define the sitemap path and the rewrite rule on first crawl.
+		if ( ! get_option( 'wpc_sitemap_path' ) ) {
+			$upload_dir = wp_upload_dir();
+			$sitemap    = wp_normalize_path( trailingslashit( $upload_dir['basedir'] ) . 'wpcrawler/sitemap.html' );
+			update_option( 'wpc_sitemap_path', $sitemap, 'yes' );
+
+			// Add a rewrite rule for the sitemap.html.
+			global $wp_rewrite;
+			$rewrite_sitemap           = [ 'sitemap.html' => 'wp-content/uploads/wpcrawler/sitemap.html' ];
+			$wp_rewrite->non_wp_rules += $rewrite_sitemap;
+			$wp_rewrite->flush_rules();
+		}
+
+		$sitemap_path = get_option( 'wpc_sitemap_path' );
+		file_put_contents( $sitemap_path, $html );
+
 	}
 
 	/**
@@ -313,10 +327,8 @@ class Wp_Crawler_Admin {
 	 */
 	private function delete_sitemap_html() {
 
-		$wp_dir = trailingslashit( get_home_path() );
-
-		if ( file_exists( $wp_dir . 'sitemap.html' ) ) {
-			unlink( $wp_dir . 'sitemap.html' );
+		if ( get_option( 'wpc_sitemap_path' ) && file_exists( get_option( 'wpc_sitemap_path' ) ) ) {
+			unlink( get_option( 'wpc_sitemap_path' ) );
 		}
 
 	}
