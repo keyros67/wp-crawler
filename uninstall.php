@@ -34,12 +34,7 @@ global $wpdb;
 
 $table_name = $wpdb->prefix . WP_CRAWLER_TABLE;
 
-$wpdb->query(
-	$wpdb->prepare(
-		'DROP TABLE IF EXISTS %s',
-		$table_name
-	)
-);
+$wpdb->query( "DROP TABLE IF EXISTS {$table_name}" );
 
 // Clean up the cron.
 if ( wp_next_scheduled( 'wpc_crawl' ) ) {

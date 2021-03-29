@@ -266,9 +266,7 @@ class Wp_Crawler_Admin {
 
 			// Delete previous results.
 			$wpdb->query(
-				$wpdb->prepare(
-					'TRUNCATE TABLE ' . esc_sql( $this->table_name ) . ';'
-				)
+				'TRUNCATE TABLE ' . esc_sql( $this->table_name ) . ';'
 			); // db call ok; no-cache ok.
 
 			return true;
