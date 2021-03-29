@@ -179,23 +179,19 @@ class Wp_Crawler_Admin {
 			$page_url = get_site_url();
 		}
 
-		// Delete previous results.
-		$wpdb->query( 'TRUNCATE TABLE ' . esc_sql( $this->table_name ) . ';' );
+		// Delete the results of the previous crawl.
+		$delete_previous_results = $this->delete_previous_results();
 
-		if ( $wpdb->last_error ) {
+		// Notification on error.
+		if ( false === $delete_previous_results ) {
 
-			// Notification.
+			// Notification on error.
 			$notification = __( 'The plugin table does not exist. Reinstall the plugin to solve this issue.', 'wp-crawler' );
 			$this->wpc_crawl_notice_error( $notification );
-			add_action( 'admin_notices', 'crawl_notice_error' );
 
 		} else {
-			$this->delete_sitemap_html();
 
-			$page_url = get_site_url();
-
-			// Call the function to save the html file.
-			$this->create_static_page( $page_url, 'homepage' );
+			global $wpdb;
 
 			// Insert the current page in the db.
 			$wpdb->insert(
@@ -234,15 +230,66 @@ class Wp_Crawler_Admin {
 				}
 			}
 
+			// Call the function to save the html file.
+			$static_page = $this->create_static_page( get_site_url(), 'homepage' );
+
+			// Notification on error.
+			if ( false === $static_page ) {
+				// Notification on error.
+				$notification = __( "The plugin was not able to write the file. Please check the plugin folder's rights.", 'wp-crawler' );
+				$this->wpc_crawl_notice_error( $notification );
+			}
+
+			// Delete the sitemap.html.
+			$this->delete_sitemap_html();
+
 			// Create the sitemap.html.
 			$this->create_sitemap_html();
 
-			update_option( 'wpc_last_crawl', gmdate( 'Y-m-d H:i:s' ), 'no' );
+			update_option( 'wpc_last_crawl', gmdate( 'Y-m-d H:i:s' ), 'yes' );
 
-			// Notification.
-			$notification = __( 'The crawl has started successfully!', 'wp-crawler' );
-			$this->wpc_crawl_notice_success( $notification );
-			add_action( 'admin_notices', 'crawl_notice_success' );
+			if ( ! isset( $notification ) ) {
+				// Notification.
+				$notification = __( 'The crawl has started successfully!', 'wp-crawler' );
+				$this->wpc_crawl_notice_success( $notification );
+			}
+		}
+
+	}
+
+	/**
+	 * Remove the previous results in the database.
+	 *
+	 * @return  bool    Return true if the data was deleted, false if not.
+	 * @since   1.0.0
+	 */
+	private function delete_previous_results(): bool {
+
+		global $wpdb;
+
+		$db_table_name = $wpdb->get_var(
+			$wpdb->prepare(
+				'SHOW TABLES LIKE %s',
+				$wpdb->esc_like( $this->table_name )
+			)
+		); // db call ok; no-cache ok.
+
+		// Check if the table exists in the database.
+		if ( $db_table_name === $this->table_name ) {
+
+			// Delete previous results.
+			$wpdb->query(
+				$wpdb->prepare(
+					'TRUNCATE TABLE ' . esc_sql( $this->table_name ) . ';'
+				)
+			); // db call ok; no-cache ok.
+
+			return true;
+
+		} else {
+
+			return false;
+
 		}
 	}
 
@@ -283,20 +330,35 @@ class Wp_Crawler_Admin {
 		$upload_dir = wp_upload_dir();
 		$static_dir = trailingslashit( $upload_dir['basedir'] ) . trailingslashit( 'wpcrawler/static' );
 
+		$exist_folder = true;
+
 		// Create the directory if not exist.
 		if ( ! file_exists( $static_dir ) ) {
-			mkdir( $static_dir, 0755, true );
+			$exist_folder = mkdir( $static_dir, 0755, true );
 		}
 
-		$file = $name . '.static.html';
-		$html = file_get_html( $url );
+		if ( true === $exist_folder ) {
 
-		file_put_contents( $static_dir . $file, $html );
+			$file = $name . '.static.html';
+			$html = file_get_html( $url );
 
-		// path to the file.
-		$file_path = trailingslashit( $upload_dir['baseurl'] ) . trailingslashit( 'wpcrawler/static' );
+			$exist_file = file_put_contents( $static_dir . $file, $html );
 
-		update_option( 'wpc_' . $name . '_static_url', $file_path . $file );
+			// path to the file.
+			$file_path = trailingslashit( $upload_dir['baseurl'] ) . trailingslashit( 'wpcrawler/static' );
+
+			update_option( 'wpc_' . $name . '_static_url', $file_path . $file );
+
+			if ( false !== $exist_file ) {
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+
+			return false;
+
+		}
 	}
 
 	/**
@@ -447,6 +509,7 @@ class Wp_Crawler_Admin {
 		echo '<p>' . esc_html( $message ) . '</p>';
 		echo '</div>';
 
+		add_action( 'admin_notices', 'crawl_notice_success' );
 	}
 
 	/**
@@ -462,9 +525,8 @@ class Wp_Crawler_Admin {
 		echo '<p>' . esc_html( $message ) . '</p>';
 		echo '</div>';
 
+		add_action( 'admin_notices', 'crawl_notice_error' );
 	}
-
-
 
 	/**
 	 * Register the stylesheets for the admin area.
