@@ -32,3 +32,7 @@
 #show-results, #show-static {
 	margin-right: 8px;
 }
+
+ul.treeview ul  {
+	padding-top: 10px;
+}

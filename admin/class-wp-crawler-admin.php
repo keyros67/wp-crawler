@@ -75,6 +75,7 @@ class Wp_Crawler_Admin {
 
 		// Add the cron hook.
 		add_action( $this->cron_name, [ $this, 'crawl' ] );
+
 	}
 
 	/**
@@ -135,31 +136,7 @@ class Wp_Crawler_Admin {
 			}
 		}
 
-		// Display results on request.
-		if ( isset( $_POST['submit-results'] ) ) {
-
-			if ( ! isset( $_POST['nonce_results'] ) || ! wp_verify_nonce( $_POST['nonce_results'], 'show_results' ) ) {
-
-				// Notification .
-				$notification = __( 'Access denied.', 'wp-crawler' );
-				$this->wpc_crawl_notice_error( $notification );
-
-				wp_die();
-
-			} else {
-
-				global $wpdb;
-
-				$webpages = $wpdb->get_results(
-					'
-					SELECT 		*
-					FROM 		' . esc_sql( $this->table_name ) . '
-					ORDER BY	parent_page_id ASC,
-								page_id ASC
-					;'
-				); // db call ok; no-cache ok.
-			}
-		}
+		$webpages = $this->get_crawl_results();
 
 		include_once WP_CRAWLER_ADMIN_PATH . '/partials/wp-crawler-admin-dashboard.php';
 	}
@@ -497,6 +474,28 @@ class Wp_Crawler_Admin {
 	}
 
 	/**
+	 * Get the crawl results stored in the database.
+	 *
+	 * @return  array           Return an array with the pages.
+	 * @since   1.0.0
+	 */
+	private function get_crawl_results(): array {
+
+		global $wpdb;
+
+		$pages = $wpdb->get_results(
+			'
+					SELECT 		*
+					FROM 		' . esc_sql( $this->table_name ) . '
+					ORDER BY	parent_page_id ASC,
+								page_id ASC
+					;'
+		); // db call ok; no-cache ok.
+
+		return $pages;
+	}
+
+	/**
 	 * Display the crawl successful notice
 	 *
 	 * @param string $message   Text to display.
@@ -572,8 +571,8 @@ class Wp_Crawler_Admin {
 		 * class.
 		 */
 
-		wp_enqueue_script( $this->plugin_name, WP_CRAWLER_ASSETS_JS_URL . 'wp-crawler-admin.js', [ 'jquery' ], $this->version, false );
-		wp_enqueue_script( 'treeviewjs', WP_CRAWLER_ASSETS_JS_URL . 'jquery.treeView.js', [ 'jquery' ], '0.2.0', false );
+		wp_enqueue_script( $this->plugin_name, WP_CRAWLER_ASSETS_JS_URL . 'wp-crawler-admin.js', [ 'jquery' ], $this->version, true );
+		wp_enqueue_script( 'treeviewjs', WP_CRAWLER_ASSETS_JS_URL . 'jquery.treeView.js', [ 'jquery' ], '0.2.0', true );
 
 	}
 

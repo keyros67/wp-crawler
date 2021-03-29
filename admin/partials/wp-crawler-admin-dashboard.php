@@ -32,16 +32,6 @@ if ( get_option( 'wpc_last_crawl' ) ) {
 	<h2 class="wpc-h2 underline"><i class="bi bi-globe"></i> <?php echo esc_html( __( 'Website Pages', 'wp-crawler' ) ); ?></h2>
 	<p><?php echo esc_html( __( 'Click on the button below to display the result of the last crawl.', 'wp-crawler' ) ); ?></p>
 	<div class="wpc-flex">
-		<div id="show-results">
-			<form method="post">
-				<p>
-                    <?php
-                    wp_nonce_field( 'show_results', 'nonce_results' );
-                    submit_button( __( 'Show pages', 'wp-crawler' ), 'primary', 'submit-results', false );
-                    ?>
-                </p>
-			</form>
-		</div>
 		<div id="show-static">
 			<p><a href="<?php echo esc_html( get_option( 'wpc_homepage_static_url' ) ); ?>" target="_blank"><input type="button" id="button-static" class="button button-primary" name="button-static" value="<?php echo esc_html( __( 'Open static homepage', 'wp-crawler' ) ); ?>"></a></p>
 		</div>
@@ -54,7 +44,7 @@ if ( get_option( 'wpc_last_crawl' ) ) {
 	<?php
 }
 
-if ( isset( $webpages ) ) {
+if ( isset( $webpages ) && ! empty( $webpages ) ) {
 	?>
 
 <div id="crawl-pages" class="wrap">
