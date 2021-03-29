@@ -77,7 +77,6 @@ class Wp_Crawler_Admin {
 		add_action( $this->cron_name, [ $this, 'crawl' ] );
 	}
 
-
 	/**
 	 * Add the plugin page to the settings submenu for administrators
 	 *
@@ -96,6 +95,8 @@ class Wp_Crawler_Admin {
 
 	/**
 	 * Main function that crawl the website.
+	 *
+	 * @param   string $page_url   Crawl starting page.
 	 *
 	 * @since   1.0.0
 	 */
@@ -130,7 +131,7 @@ class Wp_Crawler_Admin {
 					'title' => $this->get_webpage_title( $page_url ),
 					'url'   => $page_url,
 				]
-			);
+			); // db call ok; no-cache ok.
 
 			$page_id = $wpdb->insert_id;
 
@@ -156,7 +157,7 @@ class Wp_Crawler_Admin {
 							'title'          => $this->get_webpage_title( $child_page_url ),
 							'url'            => $child_page_url,
 						]
-					);
+					); // db call ok; no-cache ok.
 				}
 			}
 
@@ -175,16 +176,16 @@ class Wp_Crawler_Admin {
 	/**
 	 * Return the title of a webpage
 	 *
-	 * @param string $url   Webpage url.
+	 * @param   string $url Webpage url.
 	 *
 	 * @return  string      Return the title of the page.
 	 * @since   1.0.0
 	 */
 	private function get_webpage_title( string $url ): string {
 
-		$page = file_get_contents( $url );
+		$page = wp_remote_get( $url );
 
-		if ( preg_match( '/<title[^>]*>(.*?)<\/title>/ims', $page, $match ) ) {
+		if ( preg_match( '/<title[^>]*>(.*?)<\/title>/ims', $page['body'], $match ) ) {
 			$title = html_entity_decode( $match[1] );
 		} else {
 			$title = '';
@@ -196,12 +197,13 @@ class Wp_Crawler_Admin {
 	/**
 	 * Store the page in argument as static page
 	 *
-	 * @param string $url url of the page.
-	 * @param string $name name of the page.
+	 * @param   string $url     Url of the page.
+	 * @param   string $name    Name of the page.
 	 *
+	 * @return  bool            Return true if the file was created, false if not.
 	 * @since   1.0.0
 	 */
-	private function create_static_page( string $url, string $name ) {
+	private function create_static_page( string $url, string $name ): bool {
 
 		include_once WP_CRAWLER_ADMIN_PATH . 'lib/simple_html_dom.php';
 
