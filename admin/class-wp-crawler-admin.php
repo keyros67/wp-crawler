@@ -283,7 +283,7 @@ class Wp_Crawler_Admin {
 		$page = wp_remote_get( $url );
 
 		if ( preg_match( '/<title[^>]*>(.*?)<\/title>/ims', $page['body'], $match ) ) {
-			$title = html_entity_decode( $match[1] );
+			$title = htmlentities( $match[1] );
 		} else {
 			$title = '';
 		}
@@ -370,7 +370,7 @@ class Wp_Crawler_Admin {
 
 		$content  = '<ul class="wpc-list">' . PHP_EOL;
 		$content .= '<li>' . PHP_EOL;
-		$content .= '<i class="bi bi-house wpc-list-icon"></i> <a class="wpc-pages-link" href="' . $formatted_url . '">' . $homepage->title . '</a>' . PHP_EOL;
+		$content .= '<i class="bi bi-house wpc-list-icon"></i> <a class="wpc-pages-link" href="' . esc_html( $formatted_url ) . '">' . esc_html( $homepage->title ) . '</a>' . PHP_EOL;
 		$content .= '<ul class="wpc-list">' . PHP_EOL;
 
 		$webpages = $this->get_crawl_results( false );
@@ -379,7 +379,7 @@ class Wp_Crawler_Admin {
 
 		foreach ( $formatted_pages as $formatted_page ) {
 
-			$content .= '<li><i class="bi bi-link-45deg wpc-list-icon"></i> <a class="wpc-pages-link" href="' . $formatted_page['url'] . '">' . $formatted_page['anchor'] . '</a></li>' . PHP_EOL;
+			$content .= '<li><i class="bi bi-link-45deg wpc-list-icon"></i> <a class="wpc-pages-link" href="' . esc_html( $formatted_page['url'] ) . '">' . esc_html( $formatted_page['anchor'] ) . '</a></li>' . PHP_EOL;
 
 		}
 
