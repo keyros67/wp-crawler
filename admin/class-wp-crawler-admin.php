@@ -192,8 +192,18 @@ class Wp_Crawler_Admin {
 
 				$child_page_url = $link->href;
 
+				// Define the pattern of the website.
+				$pattern  = '#^(?:https?:\/{2})?(?:www\.)?';
+				$pattern .= $parse_page_url['host'];
+
+				if ( isset( $parse_page_url['path'] ) ) {
+					$pattern .= str_replace( '/', '\/', $parse_page_url['path'] );
+				}
+
+				$pattern .= '#';
+
 				// Check if the url is from this website with or without http(s), with or without www.
-				if ( preg_match( '#^(?:https?:\/{2})?(?:www\.)?' . str_replace( '/', '\/', $parse_page_url['host'] . $parse_page_url['path'] ) . '#', $child_page_url ) ) {
+				if ( preg_match( $pattern, $child_page_url ) ) {
 
 					// Insert the child page in the db.
 					$wpdb->insert(
