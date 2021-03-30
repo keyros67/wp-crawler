@@ -32,9 +32,9 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 // Clean up the database.
 global $wpdb;
 
-$table_name = $wpdb->prefix . WP_CRAWLER_TABLE;
+$table_name = $wpdb->prefix . 'wpcrawler';
 
-$wpdb->query( "DROP TABLE IF EXISTS {$table_name}" );
+$wpdb->query( "DROP TABLE IF EXISTS {$table_name};" );
 
 // Clean up the cron.
 if ( wp_next_scheduled( 'wpc_crawl' ) ) {
@@ -54,9 +54,11 @@ if ( is_dir( $wpcrawler_dir ) ) {
 	if ( is_dir( $static_dir ) ) {
 		$files = scandir( $static_dir );
 
-		if ( ! empty( $file ) ) {
+		if ( ! empty( $files ) ) {
 			foreach ( $files as $file ) {
-				unlink( $file );
+				if ( '.' !== $file && '..' !== $file ) {
+					unlink( $static_dir . $file );
+				}
 			}
 		}
 		rmdir( $static_dir );
@@ -65,9 +67,11 @@ if ( is_dir( $wpcrawler_dir ) ) {
 	// Remove the wpcrawler dir and his content.
 	$files = scandir( $wpcrawler_dir );
 
-	if ( ! empty( $file ) ) {
+	if ( ! empty( $files ) ) {
 		foreach ( $files as $file ) {
-			unlink( $file );
+			if ( '.' !== $file && '..' !== $file ) {
+				unlink( $wpcrawler_dir . $file );
+			}
 		}
 	}
 	rmdir( $wpcrawler_dir );
