@@ -71,10 +71,7 @@ class Wp_Crawler_Admin {
 
 		global $wpdb;
 		$this->table_name = $wpdb->prefix . WP_CRAWLER_TABLE;
-		$this->cron_name  = 'wpc_crawl';
-
-		// Add the cron hook.
-		add_action( $this->cron_name, [ $this, 'crawl' ] );
+		$this->cron_name  = WP_CRAWLER_CRON_NAME;
 
 	}
 

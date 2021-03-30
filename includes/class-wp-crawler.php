@@ -159,6 +159,9 @@ class Wp_Crawler {
 		// Add the admin menu.
 		$this->loader->add_action( 'admin_menu', $plugin_admin, 'create_menu' );
 
+		// Add the cron task.
+		$this->loader->add_action( WP_CRAWLER_CRON_NAME, $plugin_admin, 'crawl' );
+
 	}
 
 	/**
@@ -193,7 +196,7 @@ class Wp_Crawler {
 	 * @since     1.0.0
 	 * @return    string    The name of the plugin.
 	 */
-	public function get_plugin_name() {
+	public function get_plugin_name(): string {
 		return $this->plugin_name;
 	}
 
@@ -203,7 +206,7 @@ class Wp_Crawler {
 	 * @since     1.0.0
 	 * @return    Wp_Crawler_Loader    Orchestrates the hooks of the plugin.
 	 */
-	public function get_loader() {
+	public function get_loader(): Wp_Crawler_Loader {
 		return $this->loader;
 	}
 
@@ -213,7 +216,7 @@ class Wp_Crawler {
 	 * @since     1.0.0
 	 * @return    string    The version number of the plugin.
 	 */
-	public function get_version() {
+	public function get_version(): string {
 		return $this->version;
 	}
 
