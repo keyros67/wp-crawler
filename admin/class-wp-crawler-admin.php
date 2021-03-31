@@ -359,6 +359,9 @@ class Wp_Crawler_Admin {
 		// Set the page title.
 		$html = str_replace( '{{ WPC_SITEMAP_TITLE }}', __( 'Sitemap.html', 'wp-crawler' ), $html );
 
+		// Set the CSS path.
+		$html = str_replace( '{{ WPC_SITEMAP_CSS_PATH }}', WP_CRAWLER_ASSETS_URL . 'css/wp-crawler.css', $html );
+
 		global $wpdb;
 
 		$homepage = $wpdb->get_row(
