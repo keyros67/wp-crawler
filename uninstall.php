@@ -43,8 +43,8 @@ if ( wp_next_scheduled( 'wpc_crawl' ) ) {
 }
 
 // Clean up the uploads folder.
-$upload_dir  = wp_upload_dir();
-$wpcrawler_dir  = trailingslashit( $upload_dir['basedir'] ) . trailingslashit( 'wpcrawler' );
+$upload_dir    = wp_upload_dir();
+$wpcrawler_dir = trailingslashit( $upload_dir['basedir'] ) . trailingslashit( 'wpcrawler' );
 
 if ( is_dir( $wpcrawler_dir ) ) {
 

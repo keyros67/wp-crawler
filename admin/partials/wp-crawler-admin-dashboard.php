@@ -6,20 +6,20 @@
 <div class="wrap">
 	<h2 class="wpc-h2 underline"><i class="bi bi-gear"></i> <?php echo esc_html( __( 'Crawler', 'wp-crawler' ) ); ?></h2>
 	<p>
-        <?php
-        if (isset( $dashboard_message ) ) {
-	        echo esc_html( $dashboard_message );
-        }
-        ?>
-    </p>
+		<?php
+		if ( isset( $dashboard_message ) ) {
+			echo esc_html( $dashboard_message );
+		}
+		?>
+	</p>
 	<div id="submit_crawl">
 		<form method="post">
 			<p>
-                <?php
-                wp_nonce_field( 'submit_crawl', 'nonce_crawl' );
-                submit_button( __( 'Crawl Now!', 'wp-crawler' ), 'primary', 'submit-crawl', false );
-                ?>
-            </p>
+				<?php
+				wp_nonce_field( 'submit_crawl', 'nonce_crawl' );
+				submit_button( __( 'Crawl Now!', 'wp-crawler' ), 'primary', 'submit-crawl', false );
+				?>
+			</p>
 		</form>
 	</div>
 </div>
