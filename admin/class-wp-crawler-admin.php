@@ -401,11 +401,15 @@ class Wp_Crawler_Admin {
 			$sitemap    = wp_normalize_path( trailingslashit( $upload_dir['basedir'] ) . 'wpcrawler/sitemap.html' );
 			update_option( 'wpc_sitemap_path', $sitemap, 'yes' );
 
-			// Add a rewrite rule for the sitemap.html.
+			// Add the rewriting rule.
 			global $wp_rewrite;
-			$rewrite_sitemap           = [ 'sitemap.html' => 'wp-content/uploads/wpcrawler/sitemap.html' ];
-			$wp_rewrite->non_wp_rules += $rewrite_sitemap;
+			$new_non_wp_rules = [
+				'sitemap.html' => 'wp-content/uploads/wpcrawler/sitemap.html',
+			];
+
+			$wp_rewrite->non_wp_rules += $new_non_wp_rules;
 			$wp_rewrite->flush_rules();
+
 		}
 
 		$sitemap_path = get_option( 'wpc_sitemap_path' );
