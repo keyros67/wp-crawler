@@ -1,32 +1,11 @@
 <?php
-/**
- * The file that defines the core plugin class
- *
- * A class definition that includes attributes and functions used across both the
- * public-facing side of the site and the admin area.
- *
- * @link       https://www.linkedin.com/in/villemin/
- * @since      1.0.0
- *
- * @package    Wp_Crawler
- * @subpackage Wp_Crawler/includes
- */
 
-/**
- * The core plugin class.
- *
- * This is used to define internationalization, admin-specific hooks, and
- * public-facing site hooks.
- *
- * Also maintains the unique identifier of this plugin as well as the current
- * version of the plugin.
- *
- * @since      1.0.0
- * @package    Wp_Crawler
- * @subpackage Wp_Crawler/includes
- * @author     Hervé Villemin <herve@villemin.co>
- */
-class Wp_Crawler {
+namespace WP_Crawler\Core;
+
+use WP_Crawler\Admin as Admin;
+use WP_Crawler\Frontend as Frontend;
+
+class Init {
 
 	/**
 	 * The loader that's responsible for maintaining and registering all hooks that power
@@ -34,7 +13,7 @@ class Wp_Crawler {
 	 *
 	 * @since    1.0.0
 	 * @access   protected
-	 * @var      Wp_Crawler_Loader    $loader    Maintains and registers all hooks for the plugin.
+	 * @var      Loader    $loader    Maintains and registers all hooks for the plugin.
 	 */
 	protected $loader;
 
@@ -46,6 +25,24 @@ class Wp_Crawler {
 	 * @var      string    $plugin_name    The string used to uniquely identify this plugin.
 	 */
 	protected $plugin_name;
+
+	/**
+	 * The text domain of the plugin.
+	 *
+	 * @since    1.0.0
+	 * @access   protected
+	 * @var      string    $version    The current version of the plugin.
+	 */
+	protected $plugin_text_domain;
+
+	/**
+	 * The prefix of the plugin tables.
+	 *
+	 * @since    1.0.0
+	 * @access   protected
+	 * @var      string    $plugin_table_prefix    The prefix of the plugin tables.
+	 */
+	protected $plugin_table_prefix;
 
 	/**
 	 * The current version of the plugin.
@@ -61,7 +58,7 @@ class Wp_Crawler {
 	 *
 	 * Set the plugin name and the plugin version that can be used throughout the plugin.
 	 * Load the dependencies, define the locale, and set the hooks for the admin area and
-	 * the public-facing side of the site.
+	 * the frontend-facing side of the site.
 	 *
 	 * @since    1.0.0
 	 */
@@ -71,7 +68,10 @@ class Wp_Crawler {
 		} else {
 			$this->version = '1.0.0';
 		}
-		$this->plugin_name = 'wp-crawler';
+
+		$this->plugin_name         = WP_CRAWLER_NAME_SLUG;
+		$this->plugin_text_domain  = WP_CRAWLER_TEXT_DOMAIN;
+		$this->plugin_table_prefix = WP_CRAWLER_TABLE_PREFIX;
 
 		$this->load_dependencies();
 		$this->set_locale();
@@ -83,12 +83,10 @@ class Wp_Crawler {
 	/**
 	 * Load the required dependencies for this plugin.
 	 *
-	 * Include the following files that make up the plugin:
-	 *
-	 * - Wp_Crawler_Loader. Orchestrates the hooks of the plugin.
-	 * - Wp_Crawler_I18n. Defines internationalization functionality.
-	 * - Wp_Crawler_Admin. Defines all hooks for the admin area.
-	 * - Wp_Crawler_Public. Defines all hooks for the public side of the site.
+	 * - Loader. Orchestrates the hooks of the plugin.
+	 * - Internationalization_I18n. Defines internationalization functionality.
+	 * - Admin. Defines all hooks for the admin area.
+	 * - Public. Defines all hooks for the frontend side of the site.
 	 *
 	 * Create an instance of the loader which will be used to register the hooks
 	 * with WordPress.
@@ -98,37 +96,14 @@ class Wp_Crawler {
 	 */
 	private function load_dependencies() {
 
-		/**
-		 * The class responsible for orchestrating the actions and filters of the
-		 * core plugin.
-		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wp-crawler-loader.php';
-
-		/**
-		 * The class responsible for defining internationalization functionality
-		 * of the plugin.
-		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wp-crawler-i18n.php';
-
-		/**
-		 * The class responsible for defining all actions that occur in the admin area.
-		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-wp-crawler-admin.php';
-
-		/**
-		 * The class responsible for defining all actions that occur in the public-facing
-		 * side of the site.
-		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-wp-crawler-public.php';
-
-		$this->loader = new Wp_Crawler_Loader();
+		$this->loader = new Loader();
 
 	}
 
 	/**
 	 * Define the locale for this plugin for internationalization.
 	 *
-	 * Uses the Wp_Crawler_i18n class in order to set the domain and to register the hook
+	 * Uses the Internationalization_I18n class in order to set the domain and to register the hook
 	 * with WordPress.
 	 *
 	 * @since    1.0.0
@@ -136,7 +111,7 @@ class Wp_Crawler {
 	 */
 	private function set_locale() {
 
-		$plugin_i18n = new Wp_Crawler_I18n();
+		$plugin_i18n = new Internationalization_I18n( $this->plugin_text_domain );
 
 		$this->loader->add_action( 'plugins_loaded', $plugin_i18n, 'load_plugin_textdomain' );
 
@@ -151,7 +126,7 @@ class Wp_Crawler {
 	 */
 	private function define_admin_hooks() {
 
-		$plugin_admin = new Wp_Crawler_Admin( $this->get_plugin_name(), $this->get_version() );
+		$plugin_admin = new Admin\Admin( $this->get_plugin_name(), $this->get_version(), $this->get_plugin_table_prefix() );
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
@@ -165,7 +140,7 @@ class Wp_Crawler {
 	}
 
 	/**
-	 * Register all of the hooks related to the public-facing functionality
+	 * Register all of the hooks related to the frontend-facing functionality
 	 * of the plugin.
 	 *
 	 * @since    1.0.0
@@ -173,7 +148,7 @@ class Wp_Crawler {
 	 */
 	private function define_public_hooks() {
 
-		$plugin_public = new Wp_Crawler_Public( $this->get_plugin_name(), $this->get_version() );
+		$plugin_public = new Frontend\Frontend( $this->get_plugin_name(), $this->get_version() );
 
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
@@ -204,9 +179,9 @@ class Wp_Crawler {
 	 * The reference to the class that orchestrates the hooks with the plugin.
 	 *
 	 * @since     1.0.0
-	 * @return    Wp_Crawler_Loader    Orchestrates the hooks of the plugin.
+	 * @return    Loader    Orchestrates the hooks of the plugin.
 	 */
-	public function get_loader(): Wp_Crawler_Loader {
+	public function get_loader(): Loader {
 		return $this->loader;
 	}
 
@@ -218,6 +193,16 @@ class Wp_Crawler {
 	 */
 	public function get_version(): string {
 		return $this->version;
+	}
+
+	/**
+	 * Retrieve the table prefix used by the plugin.
+	 *
+	 * @since     1.0.0
+	 * @return    string    The table prefix used by the plugin.
+	 */
+	public function get_plugin_table_prefix(): string {
+		return $this->plugin_table_prefix;
 	}
 
 }

@@ -32,7 +32,8 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 // Clean up the database.
 global $wpdb;
 
-$table_name = $wpdb->prefix . 'wpcrawler';
+$plugin_table_prefix = 'wpc_';
+$table_name          = $wpdb->prefix . $plugin_table_prefix . 'internal_page';
 
 $wpdb->query( "DROP TABLE IF EXISTS {$table_name};" );
 

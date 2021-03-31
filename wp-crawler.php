@@ -9,7 +9,7 @@
  *
  * @link              https://www.linkedin.com/in/villemin/
  * @since             1.0.0
- * @package           Wp_Crawler
+ * @package           WP_Crawler
  *
  * @wordpress-plugin
  * Plugin Name:       WP Crawler
@@ -26,17 +26,21 @@
  * Domain Path:       /languages
  */
 
-// If this file is called directly, abort.
+namespace WP_Crawler;
+
+/**
+ * If this file is called directly, abort.
+ */
 defined( 'ABSPATH' ) || exit;
 
-// Constants.
+/**
+ * Define constants.
+ */
 define( 'WP_CRAWLER_FILE', __FILE__ );
 define( 'WP_CRAWLER_PATH', realpath( plugin_dir_path( WP_CRAWLER_FILE ) ) . '/' );
 define( 'WP_CRAWLER_INC_PATH', realpath( WP_CRAWLER_PATH . 'includes' ) . '/' );
 define( 'WP_CRAWLER_ADMIN_PATH', realpath( WP_CRAWLER_PATH . 'admin' ) . '/' );
 define( 'WP_CRAWLER_I18N_PATH', realpath( WP_CRAWLER_PATH . 'languages' ) . '/' );
-define( 'WP_CRAWLER_TABLE', 'wpcrawler' );
-define( 'WP_CRAWLER_CRON_NAME', 'wpc_crawl' );
 
 define( 'WP_CRAWLER_URL', plugin_dir_url( WP_CRAWLER_FILE ) );
 define( 'WP_CRAWLER_ADMIN_URL', WP_CRAWLER_URL . 'admin/' );
@@ -45,53 +49,56 @@ define( 'WP_CRAWLER_ASSETS_JS_URL', WP_CRAWLER_ASSETS_URL . 'js/' );
 define( 'WP_CRAWLER_ASSETS_CSS_URL', WP_CRAWLER_ASSETS_URL . 'css/' );
 define( 'WP_CRAWLER_ASSETS_IMG_URL', WP_CRAWLER_ASSETS_URL . 'img/' );
 
-/**
- * Currently plugin version.
- * Start at version 1.0.0 and use SemVer - https://semver.org
- * Rename this for your plugin and update it as you release new versions.
- */
+define( 'WP_CRAWLER_TABLE_PREFIX', 'wpc_' );
+define( 'WP_CRAWLER_CRON_NAME', 'wpc_crawl' );
+define( 'WP_CRAWLER_TEXT_DOMAIN', 'wp-crawler' );
+define( 'WP_CRAWLER_NAME_SLUG', 'wp-crawler' );
+
 define( 'WP_CRAWLER_VERSION', '1.0.0' );
 
 /**
- * The code that runs during plugin activation.
- * This action is documented in includes/class-wp-crawler-activator.php
+ * Autoload classes.
  */
-function activate_wp_crawler() {
-	require_once WP_CRAWLER_INC_PATH . 'class-wp-crawler-activator.php';
-	Wp_Crawler_Activator::activate();
-}
+require_once WP_CRAWLER_INC_PATH . 'lib/autoloader.php';
 
 /**
- * The code that runs during plugin deactivation.
- * This action is documented in includes/class-wp-crawler-deactivator.php
+ * Register Activation and Deactivation Hooks.
  */
-function deactivate_wp_crawler() {
-	require_once WP_CRAWLER_INC_PATH . 'class-wp-crawler-deactivator.php';
-	Wp_Crawler_Deactivator::deactivate();
-}
-
-register_activation_hook( __FILE__, 'activate_wp_crawler' );
-register_deactivation_hook( __FILE__, 'deactivate_wp_crawler' );
+register_activation_hook( __FILE__, [ __NAMESPACE__ . '\Core\Activator', 'activate' ] );
+register_deactivation_hook( __FILE__, [ __NAMESPACE__ . '\Core\Deactivator', 'deactivate' ] );
 
 /**
- * The core plugin class that is used to define internationalization,
- * admin-specific hooks, and public-facing site hooks.
- */
-require WP_CRAWLER_INC_PATH . 'class-wp-crawler.php';
-
-/**
- * Begins execution of the plugin.
+ * Plugin Singleton Container
  *
- * Since everything within the plugin is registered via hooks,
- * then kicking off the plugin from this point in the file does
- * not affect the page life cycle.
+ * Maintains a single copy of the plugin app object
  *
  * @since    1.0.0
  */
-function run_wp_crawler() {
+class WP_Crawler {
 
-	$plugin = new Wp_Crawler();
-	$plugin->run();
+	/**
+	 * The instance of the plugin.
+	 *
+	 * @since   1.0.0
+	 * @var     Init $init Instance of the plugin.
+	 */
+	private static $init;
+	/**
+	 * Loads the plugin
+	 *
+	 * @access  public
+	 */
+	public static function init() {
+
+		if ( null === self::$init ) {
+			self::$init = new Core\Init();
+			self::$init->run();
+		}
+
+		return self::$init;
+	}
 
 }
-run_wp_crawler();
+
+// Begins the execution of the plugin.
+WP_Crawler::init();

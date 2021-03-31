@@ -1,25 +1,18 @@
 <?php
+
+namespace WP_Crawler\Core;
+
 /**
  * Fired during plugin deactivation
+ *
+ * This class defines all code necessary to run during the plugin's deactivation.
  *
  * @link       https://www.linkedin.com/in/villemin/
  * @since      1.0.0
  *
- * @package    Wp_Crawler
- * @subpackage Wp_Crawler/includes
- */
-
-/**
- * Fired during plugin deactivation.
- *
- * This class defines all code necessary to run during the plugin's deactivation.
- *
- * @since      1.0.0
- * @package    Wp_Crawler
- * @subpackage Wp_Crawler/includes
- * @author     Hervé Villemin <herve@villemin.co>
- */
-class Wp_Crawler_Deactivator {
+ * @author     Hervé Villemin
+ **/
+class Deactivator {
 
 	/**
 	 * Short Description. (use period)

@@ -1,13 +1,6 @@
 <?php
-/**
- * Register all actions and filters for the plugin
- *
- * @link       https://www.linkedin.com/in/villemin/
- * @since      1.0.0
- *
- * @package    Wp_Crawler
- * @subpackage Wp_Crawler/includes
- */
+
+namespace WP_Crawler\Core;
 
 /**
  * Register all actions and filters for the plugin.
@@ -16,11 +9,12 @@
  * the plugin, and register them with the WordPress API. Call the
  * run function to execute the list of actions and filters.
  *
- * @package    Wp_Crawler
- * @subpackage Wp_Crawler/includes
- * @author     Hervé Villemin <herve@villemin.co>
+ * @link       https://www.linkedin.com/in/villemin/
+ * @since      1.0.0
+ *
+ * @author     Hervé Villemin
  */
-class Wp_Crawler_Loader {
+class Loader {
 
 	/**
 	 * The array of actions registered with WordPress.

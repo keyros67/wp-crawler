@@ -1,13 +1,6 @@
 <?php
-/**
- * The admin-specific functionality of the plugin.
- *
- * @link       https://www.linkedin.com/in/villemin/
- * @since      1.0.0
- *
- * @package    Wp_Crawler
- * @subpackage Wp_Crawler/admin
- */
+
+namespace WP_Crawler\Admin;
 
 /**
  * The admin-specific functionality of the plugin.
@@ -15,11 +8,12 @@
  * Defines the plugin name, version, and two examples hooks for how to
  * enqueue the admin-specific stylesheet and JavaScript.
  *
- * @package    Wp_Crawler
- * @subpackage Wp_Crawler/admin
+ * @link       https://www.linkedin.com/in/villemin/
+ * @since      1.0.0
+ *
  * @author     Hervé Villemin <herve@villemin.co>
  */
-class Wp_Crawler_Admin {
+class Admin {
 
 	/**
 	 * The ID of this plugin.
@@ -44,9 +38,9 @@ class Wp_Crawler_Admin {
 	 *
 	 * @since   1.0.0
 	 * @access  private
-	 * @var     string $table_name    The table name.
+	 * @var     string $table_prefix    The table name.
 	 */
-	private $table_name;
+	private $table_prefix;
 
 	/**
 	 * The name of the cron task.
@@ -60,18 +54,20 @@ class Wp_Crawler_Admin {
 	/**
 	 * Initialize the class and set its properties.
 	 *
+	 * @param string $plugin_name The name of this plugin.
+	 * @param string $version The version of this plugin.
+	 * @param string $table_prefix The table prefix of this plugin.
+	 *
 	 * @since   1.0.0
-	 * @param   string $plugin_name   The name of this plugin.
-	 * @param   string $version       The version of this plugin.
 	 */
-	public function __construct( $plugin_name, $version ) {
-
-		$this->plugin_name = $plugin_name;
-		$this->version     = $version;
+	public function __construct( string $plugin_name, string $version, string $table_prefix ) {
 
 		global $wpdb;
-		$this->table_name = $wpdb->prefix . WP_CRAWLER_TABLE;
-		$this->cron_name  = WP_CRAWLER_CRON_NAME;
+
+		$this->plugin_name  = $plugin_name;
+		$this->version      = $version;
+		$this->table_prefix = $wpdb->prefix . $table_prefix;
+		$this->cron_name    = WP_CRAWLER_CRON_NAME;
 
 	}
 
@@ -167,9 +163,10 @@ class Wp_Crawler_Admin {
 
 			global $wpdb;
 
+			$table_name = $this->table_prefix . 'internal_page';
 			// Insert the current page in the db.
 			$wpdb->insert(
-				$this->table_name,
+				$table_name,
 				[
 					'title' => $this->get_webpage_title( $page_url ),
 					'url'   => $page_url,
@@ -204,7 +201,7 @@ class Wp_Crawler_Admin {
 
 					// Insert the child page in the db.
 					$wpdb->insert(
-						$this->table_name,
+						$table_name,
 						[
 							'parent_page_id' => $page_id,
 							'title'          => $this->get_webpage_title( $child_page_url ),
@@ -251,19 +248,21 @@ class Wp_Crawler_Admin {
 
 		global $wpdb;
 
+		$table_name = $this->table_prefix . 'internal_page';
+
 		$db_table_name = $wpdb->get_var(
 			$wpdb->prepare(
 				'SHOW TABLES LIKE %s',
-				$wpdb->esc_like( $this->table_name )
+				$wpdb->esc_like( $table_name )
 			)
 		); // db call ok; no-cache ok.
 
 		// Check if the table exists in the database.
-		if ( $db_table_name === $this->table_name ) {
+		if ( $db_table_name === $table_name ) {
 
 			// Delete previous results.
 			$wpdb->query(
-				'TRUNCATE TABLE ' . esc_sql( $this->table_name ) . ';'
+				'TRUNCATE TABLE ' . esc_sql( $table_name ) . ';'
 			); // db call ok; no-cache ok.
 
 			return true;
@@ -364,10 +363,12 @@ class Wp_Crawler_Admin {
 
 		global $wpdb;
 
+		$table_name = $this->table_prefix . 'internal_page';
+
 		$homepage = $wpdb->get_row(
 			'
 			SELECT  * 
-			FROM 	' . esc_sql( $this->table_name ) . '
+			FROM 	' . esc_sql( $table_name ) . '
 			WHERE 	parent_page_id IS NULL
 			;
 			'
@@ -471,11 +472,13 @@ class Wp_Crawler_Admin {
 
 		global $wpdb;
 
+		$table_name = $this->table_prefix . 'internal_page';
+
 		if ( false === $homepage ) {
 			$pages = $wpdb->get_results(
 				'
 				SELECT 		*
-			    FROM 		' . esc_sql( $this->table_name ) . '
+			    FROM 		' . esc_sql( $table_name ) . '
 				WHERE       parent_page_id IS NOT NULL
 				ORDER BY	parent_page_id ASC,
 				            title ASC
@@ -485,7 +488,7 @@ class Wp_Crawler_Admin {
 			$pages = $wpdb->get_results(
 				'
 				SELECT 		*
-			    FROM 		' . esc_sql( $this->table_name ) . '
+			    FROM 		' . esc_sql( $table_name ) . '
 				ORDER BY	parent_page_id ASC,
 							page_id ASC
 				;'
