@@ -90,3 +90,7 @@ foreach ( $setting_options as $option ) {
 	}
 }
 
+// Clean up the rewriting rules.
+global $wp_rewrite;
+$wp_rewrite->flush_rules();
+
