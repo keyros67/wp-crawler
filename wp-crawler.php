@@ -35,6 +35,11 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * Define constants.
+ * 
+ * CODE REVIEW: constants in the global namespace like those under are to be avoided
+ * - In most cases, it's better to add anything in the global namespace
+ * - In a true OOP world, they make the code more difficult to test
+ * - A better approach would be to use a configuration object that can be passed around
  */
 define( 'WP_CRAWLER_FILE', __FILE__ );
 define( 'WP_CRAWLER_PATH', realpath( plugin_dir_path( WP_CRAWLER_FILE ) ) . '/' );
@@ -58,6 +63,8 @@ define( 'WP_CRAWLER_VERSION', '1.0.0' );
 
 /**
  * Autoload classes.
+ * CODE REVIEW: I would recommend to use composer autoloader instead of a custom one.
+ * Composer is widely used in the PHP world now, so it translated very well inside and outside of WP.
  */
 require_once WP_CRAWLER_INC_PATH . 'lib/autoloader.php';
 
@@ -87,6 +94,10 @@ class WP_Crawler {
 	 * Loads the plugin
 	 *
 	 * @access  public
+	 *
+	 * CODE REVIEW: Singleton is an anti-pattern that we really want to avoid now.
+	 * Recommended reading: https://www.alainschlesser.com/singletons-shared-instances/
+	 * https://carlalexander.ca/singletons-in-wordpress/
 	 */
 	public static function init() {
 
@@ -99,6 +110,6 @@ class WP_Crawler {
 	}
 
 }
-
+// CODE REVIEW: Initialiazing the plugin should be done on a hook like plugins_loaded.
 // Begins the execution of the plugin.
 WP_Crawler::init();
