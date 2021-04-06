@@ -12,6 +12,13 @@
  * @param string $class_name The fully-qualified name of the class to load.
  *
  * @since   1.1.0
+ *
+ * CODE REVIEW: This autoloader does fit into the WordPress standards, but it 
+ * doesn't fit into the more real standard that is the PSR-4:
+ * https://www.php-fig.org/psr/psr-4/
+ * 
+ * We favour the standard from the PHP world over the one from WP as it is
+ * easier to translate between WP and not WP projects that way.
  */
 
 /*

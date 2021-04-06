@@ -51,7 +51,7 @@ class Init {
 	 * @access   protected
 	 * @var      string    $version    The current version of the plugin.
 	 */
-	protected $version;
+	protected $version = '1.0.0';
 
 	/**
 	 * Define the core functionality of the plugin.
@@ -65,9 +65,16 @@ class Init {
 	public function __construct() {
 		if ( defined( 'WP_CRAWLER_VERSION' ) ) {
 			$this->version = WP_CRAWLER_VERSION;
-		} else {
-			$this->version = '1.0.0';
 		}
+		/**
+		 * CODE REVIEW: the else here is unnecessary
+		 * The property default value can be set on declaration directly
+		 * and overloaded in the construct.
+		 *
+		 * Additionally, all those properties initialization could be done
+		 * by passing the data to the constructor instead of using
+		 * global constants.
+		 */
 
 		$this->plugin_name         = WP_CRAWLER_NAME_SLUG;
 		$this->plugin_text_domain  = WP_CRAWLER_TEXT_DOMAIN;
@@ -75,6 +82,14 @@ class Init {
 
 		$this->load_dependencies();
 		$this->set_locale();
+		/**
+		 * CODE REVIEW: Initializing hooks on the constructor should be avoided
+		 *
+		 * It makes your code difficult to test, and should not be a part of the
+		 * class instantiation.
+		 *
+		 * Recommended reading: https://carlalexander.ca/designing-class-wordpress-hooks/
+		 */
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
 
@@ -95,7 +110,15 @@ class Init {
 	 * @access   private
 	 */
 	private function load_dependencies() {
-
+		/**
+		 * CODE REVIEW: creating new object instances inside methods should be avoided.
+		 *
+		 * It's creating tight coupling between objects, which makes them:
+		 * - More complex
+		 * - More difficult to test
+		 *
+		 * Ideally, object dependencies should be injected through the constructor.
+		 */
 		$this->loader = new Loader();
 
 	}
@@ -110,7 +133,7 @@ class Init {
 	 * @access   private
 	 */
 	private function set_locale() {
-
+		// CODE REVIEW: see comment in load_dependencies().
 		$plugin_i18n = new Internationalization_I18n( $this->plugin_text_domain );
 
 		$this->loader->add_action( 'plugins_loaded', $plugin_i18n, 'load_plugin_textdomain' );
@@ -125,7 +148,7 @@ class Init {
 	 * @access   private
 	 */
 	private function define_admin_hooks() {
-
+		// CODE REVIEW: see comment in load_dependencies().
 		$plugin_admin = new Admin\Admin( $this->get_plugin_name(), $this->get_version(), $this->get_plugin_table_prefix() );
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
@@ -147,7 +170,7 @@ class Init {
 	 * @access   private
 	 */
 	private function define_public_hooks() {
-
+		// CODE REVIEW: see comment in load_dependencies().
 		$plugin_public = new Frontend\Frontend( $this->get_plugin_name(), $this->get_version() );
 
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );

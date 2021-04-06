@@ -93,39 +93,46 @@ class Admin {
 	 * @since   1.0.0
 	 */
 	public function page_dashboard() {
+		/**
+		 * CODE REVIEW: Initialize the variable with a default value. Advantages:
+		 * - The variable is always set, no need to use isset() in the view
+		 * - It removes an unnecessary else condition
+		 * - The code is easier to read
+		 */
+		$dashboard_message = __( 'Welcome to your WP Crawler Dashboard! Run the crawler to start enjoying this nice plugin. Once you run it, it will be automatically scheduled every hour.', 'wp-crawler' );
 
 		// Dashboard message.
 		if ( get_option( 'wpc_last_crawl' ) ) {
 			$dashboard_message = __( 'Your pages are updated every hour. Click on the button to update them manually.', 'wp-crawler' );
-		} else {
-			$dashboard_message = __( 'Welcome to your WP Crawler Dashboard! Run the crawler to start enjoying this nice plugin. Once you run it, it will be automatically scheduled every hour.', 'wp-crawler' );
 		}
 
 		// Crawl requested.
 		if ( isset( $_POST['submit-crawl'] ) ) {
-
-			if ( ! isset( $_POST['nonce_crawl'] ) || ! wp_verify_nonce( $_POST['nonce_crawl'], 'submit_crawl' ) ) {
+			// CODE REVIEW: values from the $_POST global should be sanitized before use.
+			if ( ! isset( $_POST['nonce_crawl'] ) || ! wp_verify_nonce( sanitize_key( $_POST['nonce_crawl'] ), 'submit_crawl' ) ) {
 
 				// Notification .
 				$notification = __( 'Access denied.', 'wp-crawler' );
 				$this->wpc_crawl_notice_error( $notification );
 
 				wp_die();
+			}
+			/**
+			 * CODE REVIEW: this else is unnecessary, if you reach wp_die()
+			 * the script execution stops anyway
+			 */
 
-			} else {
+			// Crawl the site starting on the homepage.
+			$this->crawl( get_site_url() );
 
-				// Crawl the site starting on the homepage.
-				$this->crawl( get_site_url() );
+			// Add the cron task.
+			$cron_task = $this->set_cron_task( $this->cron_name );
 
-				// Add the cron task.
-				$cron_task = $this->set_cron_task( $this->cron_name );
-
+			// Notification on error.
+			if ( false === $cron_task ) {
 				// Notification on error.
-				if ( false === $cron_task ) {
-					// Notification on error.
-					$notification = __( 'The plugin was not able to schedule your crawl. Please reinstall the plugin to fix this issue.', 'wp-crawler' );
-					$this->wpc_crawl_notice_error( $notification );
-				}
+				$notification = __( 'The plugin was not able to schedule your crawl. Please reinstall the plugin to fix this issue.', 'wp-crawler' );
+				$this->wpc_crawl_notice_error( $notification );
 			}
 		}
 
@@ -158,84 +165,102 @@ class Admin {
 			// Notification on error.
 			$notification = __( 'The plugin table does not exist. Reinstall the plugin to solve this issue.', 'wp-crawler' );
 			$this->wpc_crawl_notice_error( $notification );
+			return;
+		}
 
-		} else {
+		/**
+		 * CODE REVIEW: Returning early is a better choice here
+		 * The rest of the code won't be executed anyway.
+		 */
 
-			global $wpdb;
+		global $wpdb;
 
-			$table_name = $this->table_prefix . 'internal_page';
-			// Insert the current page in the db.
-			$wpdb->insert(
-				$table_name,
-				[
-					'title' => $this->get_webpage_title( $page_url ),
-					'url'   => $page_url,
-				]
-			); // db call ok; no-cache ok.
+		$table_name = $this->table_prefix . 'internal_page';
+		// Insert the current page in the db.
+		$wpdb->insert(
+			$table_name,
+			[
+				'title' => $this->get_webpage_title( $page_url ),
+				'url'   => $page_url,
+			]
+		); // db call ok; no-cache ok.
 
-			$page_id = $wpdb->insert_id;
+		$page_id = $wpdb->insert_id;
 
-			// Get the html of the current page and then the links.
-			$html = file_get_html( $page_url );
+		// Get the html of the current page and then the links.
+		$html = file_get_html( $page_url );
 
-			$links = $html->find( 'a' );
+		/**
+		 * CODE REVIEW:
+		 * What happens here if file_get_html didn't return an object?
+		 *
+		 * The function can also return a boolean.
+		 */
+		$links = $html->find( 'a' );
 
-			$parse_page_url = wp_parse_url( $page_url );
+		$parse_page_url = wp_parse_url( $page_url );
 
-			foreach ( $links as $link ) {
+		foreach ( $links as $link ) {
 
-				$child_page_url = $link->href;
+			$child_page_url = $link->href;
 
-				// Define the pattern of the website.
-				$pattern  = '#^(?:https?:\/{2})?(?:www\.)?';
-				$pattern .= $parse_page_url['host'];
+			// Define the pattern of the website.
+			$pattern  = '#^(?:https?:\/{2})?(?:www\.)?';
+			/**
+			 * CODE REVIEW: Are we sure $parse_page_url is always an array?
+			 *
+			 * - wp_parse_url() can also return false
+			 * - $page_url can be an empty string (as from the method signature)
+			 *
+			 * What happens when trying to access an array offset on a variable
+			 * that is not an array?
+			 */
+			$pattern .= $parse_page_url['host'];
 
-				if ( isset( $parse_page_url['path'] ) ) {
-					$pattern .= str_replace( '/', '\/', $parse_page_url['path'] );
-				}
-
-				$pattern .= '#';
-
-				// Check if the url is from this website with or without http(s), with or without www.
-				if ( preg_match( $pattern, $child_page_url ) ) {
-
-					// Insert the child page in the db.
-					$wpdb->insert(
-						$table_name,
-						[
-							'parent_page_id' => $page_id,
-							'title'          => $this->get_webpage_title( $child_page_url ),
-							'url'            => $child_page_url,
-						]
-					); // db call ok; no-cache ok.
-				}
+			if ( isset( $parse_page_url['path'] ) ) {
+				$pattern .= str_replace( '/', '\/', $parse_page_url['path'] );
 			}
 
-			// Call the function to save the html file.
-			$static_page = $this->create_static_page( get_site_url(), 'homepage' );
+			$pattern .= '#';
 
-			// Notification on error.
-			if ( false === $static_page ) {
-				// Notification on error.
-				$notification = __( "The plugin was not able to write the file. Please check the plugin folder's rights.", 'wp-crawler' );
-				$this->wpc_crawl_notice_error( $notification );
-			}
+			// Check if the url is from this website with or without http(s), with or without www.
+			if ( preg_match( $pattern, $child_page_url ) ) {
 
-			// Delete the sitemap.html.
-			$this->delete_sitemap_html();
-
-			// Create the sitemap.html.
-			$this->create_sitemap_html();
-
-			update_option( 'wpc_last_crawl', gmdate( 'Y-m-d H:i:s' ), 'yes' );
-
-			if ( ! isset( $notification ) ) {
-				// Notification.
-				$notification = __( 'The crawl has started successfully!', 'wp-crawler' );
-				$this->wpc_crawl_notice_success( $notification );
+				// Insert the child page in the db.
+				$wpdb->insert(
+					$table_name,
+					[
+						'parent_page_id' => $page_id,
+						'title'          => $this->get_webpage_title( $child_page_url ),
+						'url'            => $child_page_url,
+					]
+				); // db call ok; no-cache ok.
 			}
 		}
 
+		// Call the function to save the html file.
+		$static_page = $this->create_static_page( get_site_url(), 'homepage' );
+
+		// Notification on error.
+		if ( false === $static_page ) {
+			// Notification on error.
+			$notification = __( "The plugin was not able to write the file. Please check the plugin folder's rights.", 'wp-crawler' );
+			$this->wpc_crawl_notice_error( $notification );
+		}
+
+		// Delete the sitemap.html.
+		$this->delete_sitemap_html();
+
+		// Create the sitemap.html.
+		$this->create_sitemap_html();
+
+		update_option( 'wpc_last_crawl', gmdate( 'Y-m-d H:i:s' ), 'yes' );
+
+		if ( ! isset( $notification ) ) {
+			// Notification.
+			$notification = __( 'The crawl has started successfully!', 'wp-crawler' );
+			$this->wpc_crawl_notice_success( $notification );
+		}
 	}
 
 	/**
@@ -267,11 +292,13 @@ class Admin {
 
 			return true;
 
-		} else {
-
-			return false;
-
 		}
+
+		/**
+		 * CODE REVIEW: else is not needed here, you already have a return
+		 * statement in the if block.
+		 */
+		return false;
 	}
 
 	/**
@@ -283,16 +310,19 @@ class Admin {
 	 * @since   1.0.0
 	 */
 	private function get_webpage_title( string $url ): string {
-
 		$page = wp_remote_get( $url );
 
+		/**
+		 * CODE REVIEW: wp_remote_get() returns an array or a WP_Error object
+		 *
+		 * What happens if we try to access the 'body' key on the $page
+		 * when it's a WP_Error object instead of an array?
+		 */
 		if ( preg_match( '/<title[^>]*>(.*?)<\/title>/ims', $page['body'], $match ) ) {
-			$title = htmlentities( $match[1] );
-		} else {
-			$title = '';
+			return htmlentities( $match[1] );
 		}
 
-		return $title;
+		return '';
 	}
 
 	/**
@@ -305,7 +335,12 @@ class Admin {
 	 * @since   1.0.0
 	 */
 	private function create_static_page( string $url, string $name ): bool {
-
+		/**
+		 * CODE REVIEW: This file is included multiple times in different methods
+		 *
+		 * It would be more performant to include it once on initialization of the plugin
+		 * using the composer autoloader for example.
+		 */
 		include_once WP_CRAWLER_ADMIN_PATH . 'lib/simple_html_dom.php';
 
 		$upload_dir = wp_upload_dir();
@@ -318,28 +353,27 @@ class Admin {
 			$exist_folder = mkdir( $static_dir, 0755, true );
 		}
 
-		if ( true === $exist_folder ) {
-
-			$file = $name . '.static.html';
-			$html = file_get_html( $url );
-
-			$exist_file = file_put_contents( $static_dir . $file, $html );
-
-			// path to the file.
-			$file_path = trailingslashit( $upload_dir['baseurl'] ) . trailingslashit( 'wpcrawler/static' );
-
-			update_option( 'wpc_' . $name . '_static_url', $file_path . $file );
-
-			if ( false !== $exist_file ) {
-				return true;
-			} else {
-				return false;
-			}
-		} else {
-
+		if ( ! $exist_folder ) {
 			return false;
-
 		}
+
+		$file = $name . '.static.html';
+		$html = file_get_html( $url );
+
+		/**
+		 * CODE REVIEW: File operations should use WP_Filesystem methods
+		 * instead of direct PHP filesystem calls.
+		 *
+		 * https://developer.wordpress.org/reference/functions/wp_filesystem/
+		 */
+		$exist_file = file_put_contents( $static_dir . $file, $html );
+
+		// path to the file.
+		$file_path = trailingslashit( $upload_dir['baseurl'] ) . trailingslashit( 'wpcrawler/static' );
+
+		update_option( 'wpc_' . $name . '_static_url', $file_path . $file );
+
+		return (bool) $exist_file;
 	}
 
 	/**
@@ -379,7 +413,7 @@ class Admin {
 
 		$content  = '<ul class="wpc-list">' . PHP_EOL;
 		$content .= '<li>' . PHP_EOL;
-		$content .= '<i class="bi bi-house wpc-list-icon"></i> <a class="wpc-pages-link" href="' . esc_html( $formatted_url ) . '">' . esc_html( $homepage->title ) . '</a>' . PHP_EOL;
+		$content .= '<i class="bi bi-house wpc-list-icon"></i> <a class="wpc-pages-link" href="' . esc_url( $formatted_url ) . '">' . esc_html( $homepage->title ) . '</a>' . PHP_EOL;
 		$content .= '<ul class="wpc-list">' . PHP_EOL;
 
 		$webpages = $this->get_crawl_results( false );
@@ -388,7 +422,7 @@ class Admin {
 
 		foreach ( $formatted_pages as $formatted_page ) {
 
-			$content .= '<li><i class="bi bi-link-45deg wpc-list-icon"></i> <a class="wpc-pages-link" href="' . esc_html( $formatted_page['url'] ) . '">' . esc_html( $formatted_page['anchor'] ) . '</a></li>' . PHP_EOL;
+			$content .= '<li><i class="bi bi-link-45deg wpc-list-icon"></i> <a class="wpc-pages-link" href="' . esc_url( $formatted_page['url'] ) . '">' . esc_html( $formatted_page['anchor'] ) . '</a></li>' . PHP_EOL;
 
 		}
 
@@ -455,9 +489,9 @@ class Admin {
 
 		if ( true === $is_cron_scheduled ) {
 			return true;
-		} else {
-			return false;
 		}
+
+		return false;
 	}
 
 	/**
@@ -475,7 +509,7 @@ class Admin {
 		$table_name = $this->table_prefix . 'internal_page';
 
 		if ( false === $homepage ) {
-			$pages = $wpdb->get_results(
+			return $wpdb->get_results(
 				'
 				SELECT 		*
 			    FROM 		' . esc_sql( $table_name ) . '
@@ -484,18 +518,17 @@ class Admin {
 				            title ASC
 				;'
 			); // db call ok; no-cache ok.
-		} else {
-			$pages = $wpdb->get_results(
-				'
-				SELECT 		*
-			    FROM 		' . esc_sql( $table_name ) . '
-				ORDER BY	parent_page_id ASC,
-							page_id ASC
-				;'
-			); // db call ok; no-cache ok.
 		}
 
-		return $pages;
+		return $wpdb->get_results(
+			'
+			SELECT 		*
+			FROM 		' . esc_sql( $table_name ) . '
+			ORDER BY	parent_page_id ASC,
+						page_id ASC
+			;'
+		); // db call ok; no-cache ok.
+
 	}
 
 	/**
@@ -514,19 +547,22 @@ class Admin {
 
 			$formatted_url = untrailingslashit( strtolower( strtok( $page->url, '#' ) ) );
 
-			if ( ! in_array( $formatted_url, $urls, true ) ) {
-
-				$urls[] = $formatted_url;
-
-				$formatted_pages[ $page->page_id ]['url'] = $formatted_url;
-
-				if ( trim( $page->title ) !== '' ) {
-					$formatted_pages[ $page->page_id ]['anchor'] = $page->title;
-				} else {
-					$formatted_pages[ $page->page_id ]['anchor'] = $page->url;
-				}
+			if ( in_array( $formatted_url, $urls, true ) ) {
+				continue;
 			}
+
+			$urls[] = $formatted_url;
+
+			$formatted_pages[ $page->page_id ]['url'] = $formatted_url;
+
+			if ( trim( $page->title ) !== '' ) {
+				$formatted_pages[ $page->page_id ]['anchor'] = $page->title;
+				continue;
+			}
+
+			$formatted_pages[ $page->page_id ]['anchor'] = $page->url;
 		}
+
 		return $formatted_pages;
 	}
 
